@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Считай и играй</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<svg id="bg-svg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgr" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#2a277a"/>
+      <stop offset="100%" stop-color="#080620"/>
+    </radialGradient>
+  </defs>
+  <rect width="1000" height="700" fill="url(#bgr)"/>
+  <g id="star-g"></g>
+  <g class="cloud">
+    <ellipse cx="130" cy="90" rx="90" ry="30" fill="rgba(255,255,255,.05)"/>
+    <ellipse cx="185" cy="76" rx="55" ry="22" fill="rgba(255,255,255,.05)"/>
+  </g>
+  <g class="cloud">
+    <ellipse cx="780" cy="140" rx="100" ry="32" fill="rgba(255,255,255,.04)"/>
+    <ellipse cx="840" cy="126" rx="60" ry="24" fill="rgba(255,255,255,.04)"/>
+  </g>
+  <circle id="moon" cx="880" cy="72" r="46" fill="#ffe566" opacity=".85">
+    <animate attributeName="opacity" values=".85;.95;.85" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  <circle id="moon-shadow" cx="902" cy="57" r="37" fill="#110e3a"/>
+</svg>
+
+<div id="menu-screen" class="screen">
+  <div class="menu-content">
+    <h1 class="title">&#11088; Считай и играй &#11088;</h1>
+    <p class="subtitle">Выбери уровень сложности</p>
+    <div class="diff-grid">
+      <button class="diff-btn" data-diff="easy">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="112" height="112" rx="28" fill="#6BFFB8" stroke="#1a6a46" stroke-width="3"/>
+          <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
+          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#004d20">&#128035;</text>
+        </svg>
+        <span>Лёгкий</span>
+        <small>счёт до 5 · без таймера</small>
+      </button>
+      <button class="diff-btn" data-diff="medium">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="112" height="112" rx="28" fill="#FFD93D" stroke="#8a5c00" stroke-width="3"/>
+          <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
+          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#5a3c00">&#128640;</text>
+        </svg>
+        <span>Средний</span>
+        <small>до 8 · сложение · 15 сек</small>
+      </button>
+      <button class="diff-btn" data-diff="hard">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="112" height="112" rx="28" fill="#FF6B9D" stroke="#8a1040" stroke-width="3"/>
+          <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
+          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#5a0020">&#128293;</text>
+        </svg>
+        <span>Сложный</span>
+        <small>до 10 · вычитание · 10 сек</small>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="game-screen" class="screen hidden">
+  <div id="app">
+    <h1 class="title-sm">&#11088; Считай и играй &#11088;</h1>
+    <div class="scorebar">
+      <div class="pill">&#9989; Счёт: <span id="score-val">0</span></div>
+      <div class="pill">&#127919; Вопрос: <span id="q-num">1</span>/10</div>
+    </div>
+    <div id="timer-track"><div id="timer-bar"></div></div>
+    <div class="card">
+      <div class="q-text" id="q-text">Загрузка…</div>
+      <svg id="obj-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div id="answers" class="answers"></div>
+    <div id="feedback" class="feedback"></div>
+    <button id="next-btn" class="next-btn">Дальше &#10152;</button>
+    <p class="scroll-hint">&#8595; прокрути или нажми кнопку</p>
+  </div>
+</div>
+
+<div id="complete-screen" class="screen hidden">
+  <div class="complete-content">
+    <svg viewBox="0 0 160 160" class="trophy-svg" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="80" cy="80" r="72" fill="#FFD93D" opacity=".9">
+        <animate attributeName="r" values="72;80;72" dur="1s" repeatCount="indefinite"/>
+      </circle>
+      <text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" font-size="76">&#127881;</text>
+    </svg>
+    <h2 class="complete-title">Молодец!</h2>
+    <p id="final-txt" class="final-txt"></p>
+    <div class="complete-btns">
+      <button id="restart-btn" class="btn-mint">Ещё раз &#128260;</button>
+      <button id="newgame-btn" class="btn-yellow">Сменить уровень &#127918;</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
