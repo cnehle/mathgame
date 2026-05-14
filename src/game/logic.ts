@@ -17,7 +17,7 @@ export const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
     maxCount: 8,
     useAddition: true,
     useSubtraction: false,
-    timeLimit: 15,
+    timeLimit: 90,
   },
   hard: {
     label: 'Hard',
@@ -25,7 +25,7 @@ export const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
     maxCount: 10,
     useAddition: true,
     useSubtraction: true,
-    timeLimit: 10,
+    timeLimit: 60,
   },
 };
 
