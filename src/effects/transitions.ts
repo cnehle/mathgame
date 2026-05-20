@@ -2,6 +2,7 @@
 export class ScrollTransition {
   private container: HTMLElement;
   private isAnimating = false;
+  public enabled = false;
   private onScrollCallback: (() => void) | null = null;
   private wheelHandler: (e: WheelEvent) => void;
   private touchStartY = 0;
@@ -34,9 +35,10 @@ export class ScrollTransition {
   }
 
   private triggerNext(): void {
-    if (this.isAnimating || !this.onScrollCallback) return;
-    this.onScrollCallback();
-  }
+  if (this.isAnimating || !this.onScrollCallback) return;
+  if (!this.enabled) return;
+  this.onScrollCallback();
+}
 
   // Animate card sliding out down, new content coming in from top
   async transition(onMidpoint: () => void): Promise<void> {

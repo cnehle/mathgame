@@ -89,6 +89,7 @@ export class GameUI {
     this.menuScreen.classList.add('hidden');
     this.gameScreen.classList.remove('hidden');
     this.completeScreen.classList.add('hidden');
+    this.scrollTransition.enabled = true;
     this.loadQuestion();
   }
 
@@ -217,6 +218,7 @@ export class GameUI {
   // ── Complete ──────────────────────────────────────────────
   private showComplete(): void {
     this.state.phase = 'complete';
+    this.scrollTransition.enabled = false;
     this.timer.hide();
     this.gameScreen.classList.add('hidden');
     this.completeScreen.classList.remove('hidden');
