@@ -43,6 +43,7 @@ html, body {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.96);
+  display: none;
 }
 
 /* ════════════ MENU ════════════ */
