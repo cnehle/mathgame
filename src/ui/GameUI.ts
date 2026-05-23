@@ -95,24 +95,49 @@ export class GameUI {
     });
   }
 
-  private startGame(difficulty: Difficulty): void {
-    this.stopMenuMorphLoop();
-    this.state = {
-      phase: 'playing',
-      score: 0,
-      questionIndex: 0,
-      totalQuestions: TOTAL,
-      answered: false,
-      difficulty,
-      responseTimes: [],
-      questionStartTime: performance.now(),
-    };
-    this.scrollTransition.enabled = true;
-    this.menuScreen.classList.add('hidden');
-    this.gameScreen.classList.remove('hidden');
-    this.completeScreen.classList.add('hidden');
-    this.loadQuestion();
+  private async startGame(difficulty: Difficulty): Promise<void> {
+  this.stopMenuMorphLoop();
+
+  // For drawing mode, ensure neural network is ready first
+  if (difficulty === 'drawing') {
+    await this.ensureRecognizerReady();
   }
+
+  this.state = {
+    phase: 'playing',
+    score: 0,
+    questionIndex: 0,
+    totalQuestions: TOTAL,
+    answered: false,
+    difficulty,
+    responseTimes: [],
+    questionStartTime: performance.now(),
+  };
+  this.scrollTransition.enabled = true;
+  this.menuScreen.classList.add('hidden');
+  this.gameScreen.classList.remove('hidden');
+  this.completeScreen.classList.add('hidden');
+  this.loadQuestion();
+}
+
+private async ensureRecognizerReady(): Promise<void> {
+  const overlay = q<HTMLElement>('#loading-overlay');
+  const stageEl = q<HTMLElement>('#loading-stage');
+  const pctEl = q<HTMLElement>('#loading-pct');
+  const barEl = q<HTMLElement>('#loading-bar');
+
+  overlay.classList.remove('hidden');
+
+  await DrawingPad.initRecognizer((stage, pct) => {
+    stageEl.textContent = stage;
+    pctEl.textContent = `${Math.round(pct)}%`;
+    barEl.style.width = `${pct}%`;
+  });
+
+  // Small delay so the user sees "Готово!"
+  await new Promise((r) => setTimeout(r, 400));
+  overlay.classList.add('hidden');
+}
 
   // ── Game ──────────────────────────────────────────────────
   private bindGameEvents(): void {

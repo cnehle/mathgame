@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet"/>
-  <script type="module" crossorigin src="/mathgame/assets/index-KY7_H_cA.js"></script>
-  <link rel="stylesheet" crossorigin href="/mathgame/assets/index-BjDOCluX.css">
+  <script type="module" crossorigin src="/mathgame/assets/index-CCaeH0aI.js"></script>
+  <link rel="stylesheet" crossorigin href="/mathgame/assets/index-bbJR0Gkw.css">
 </head>
 <body>
 
@@ -195,5 +195,48 @@
   </div>
 </div>
 
+<!-- ══ LOADING OVERLAY (neural network training) ══ -->
+<div id="loading-overlay" class="loading-overlay hidden">
+  <div class="loading-content">
+    <svg viewBox="0 0 100 100" class="loading-brain" xmlns="http://www.w3.org/2000/svg">
+      <!-- Brain outline -->
+      <ellipse cx="50" cy="50" rx="38" ry="34" fill="none" stroke="#FFD93D" stroke-width="3"/>
+      <!-- Brain folds -->
+      <path d="M50,20 Q35,30 35,45 Q35,55 45,55 Q50,60 50,70"
+            fill="none" stroke="#FFD93D" stroke-width="2" opacity=".7"/>
+      <path d="M50,20 Q65,30 65,45 Q65,55 55,55 Q50,60 50,70"
+            fill="none" stroke="#FFD93D" stroke-width="2" opacity=".7"/>
+      <!-- Pulsing dots — neural activity -->
+      <circle cx="35" cy="40" r="3" fill="#6BFFB8">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="65" cy="40" r="3" fill="#FF6B9D">
+        <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="50" cy="55" r="3" fill="#C3B1E1">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="40" cy="65" r="3" fill="#FF8C69">
+        <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="60" cy="65" r="3" fill="#FFD93D">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+
+    <h2 class="loading-title">Подготавливаем нейросеть</h2>
+    <p id="loading-stage" class="loading-stage">Загрузка...</p>
+
+    <div class="loading-track">
+      <div id="loading-bar" class="loading-bar"></div>
+    </div>
+    <p id="loading-pct" class="loading-pct">0%</p>
+
+    <p class="loading-hint">
+      В первый раз нужно подождать ~30 секунд.<br/>
+      Потом модель сохранится в браузере и будет открываться мгновенно.
+    </p>
+  </div>
+</div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import type { Point } from '../types';
-import { recognize } from '../recognizer/algorithm';
-import { DIGIT_TEMPLATES } from '../recognizer/templates';
+import { NeuralRecognizer } from '../recognizer/neural';
+import { DrawingPreprocessor } from '../recognizer/preprocessor';
 
 type RecognizedCallback = (result: {
   digit: number;
@@ -9,6 +9,24 @@ type RecognizedCallback = (result: {
 }) => void;
 
 export class DrawingPad {
+  // Shared across all instances — model trains only once
+  private static recognizer: NeuralRecognizer | null = null;
+  private static preprocessor: DrawingPreprocessor | null = null;
+
+/**
+   * Initializes the shared neural recognizer.
+   * Call this once before creating any DrawingPad instances.
+   * Loads from IndexedDB if available, otherwise trains a new model.
+   */
+  static async initRecognizer(
+    onProgress?: (stage: string, pct: number) => void
+  ): Promise<void> {
+    if (DrawingPad.recognizer && DrawingPad.recognizer.ready()) return;
+    DrawingPad.recognizer = new NeuralRecognizer();
+    DrawingPad.preprocessor = new DrawingPreprocessor();
+    await DrawingPad.recognizer.init(onProgress);
+  }
+
   private svg: SVGSVGElement;
   private currentPath: SVGPathElement | null = null;
   private points: Point[] = [];
@@ -70,12 +88,35 @@ export class DrawingPad {
       this.onRecognizedCb?.({ digit: -1, score: 0, correct: false });
       return;
     }
-    const result = recognize(this.points, DIGIT_TEMPLATES);
-    const correct = result.digit === this.correctAnswer && result.score > 0.15;
+    if (!DrawingPad.recognizer || !DrawingPad.preprocessor) {
+      console.error('Recognizer not initialized');
+      return;
+    }
+
+    // Convert SVG drawing to 28×28 MNIST format
+    const imageData = DrawingPad.preprocessor.process(this.svg);
+    const result = DrawingPad.recognizer.predict(imageData);
+
+    console.log(
+      'Neural prediction:',
+      result.allScores
+        .map((s, i) => `${i}:${(s * 100).toFixed(1)}%`)
+        .join(' ')
+    );
+    console.log(`Best: ${result.digit} (${(result.score * 100).toFixed(1)}%)`);
+
+    const correct =
+      result.digit === this.correctAnswer && result.score > 0.5;
+
     if (correct) this.animateSuccess();
     else this.animateFailure();
+
     setTimeout(() => {
-      this.onRecognizedCb?.({ ...result, correct });
+      this.onRecognizedCb?.({
+        digit: result.digit,
+        score: result.score,
+        correct,
+      });
     }, correct ? 400 : 500);
   }
 
