@@ -74,26 +74,41 @@ export function normalize(points: Point[]): Point[] {
 }
 
 function resample(points: Point[], n: number): Point[] {
-  const I = pathLength(points) / (n - 1);
-  let D = 0;
-  const newPoints: Point[] = [{ ...points[0] }];
+  if (points.length < 2) return points;
 
-  for (let i = 1; i < points.length; i++) {
-    const d = dist(points[i - 1], points[i]);
+  const totalLength = pathLength(points);
+  if (totalLength === 0) return points;
+
+  const I = totalLength / (n - 1);
+  let D = 0;
+  let working = points.map((p) => ({ ...p }));
+  const newPoints: Point[] = [{ ...working[0] }];
+
+  let i = 1;
+  while (i < working.length) {
+    const d = dist(working[i - 1], working[i]);
+    if (d === 0) {
+      i++;
+      continue;
+    }
     if (D + d >= I) {
-      const qx = points[i - 1].x + ((I - D) / d) * (points[i].x - points[i - 1].x);
-      const qy = points[i - 1].y + ((I - D) / d) * (points[i].y - points[i - 1].y);
+      const qx = working[i - 1].x + ((I - D) / d) * (working[i].x - working[i - 1].x);
+      const qy = working[i - 1].y + ((I - D) / d) * (working[i].y - working[i - 1].y);
       const q: Point = { x: qx, y: qy };
       newPoints.push(q);
-      points = [q, ...points.slice(i)];
-      i = 1;
+      working.splice(i, 0, q);
       D = 0;
     } else {
       D += d;
     }
+    i++;
   }
-  if (newPoints.length === n - 1) {
-    newPoints.push({ ...points[points.length - 1] });
+
+  while (newPoints.length < n) {
+    newPoints.push({ ...working[working.length - 1] });
+  }
+  if (newPoints.length > n) {
+    newPoints.length = n;
   }
   return newPoints;
 }
