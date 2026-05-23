@@ -14,13 +14,17 @@ export function recognize(
   let bestScore = -Infinity;
   let bestDigit = -1;
 
+  const scores: Array<{ digit: number; score: number }> = [];
   for (const tmpl of templates) {
     const score = greedyCloudMatch(candidate, tmpl.points);
+    scores.push({ digit: tmpl.digit, score });
     if (score > bestScore) {
       bestScore = score;
       bestDigit = tmpl.digit;
     }
   }
+  console.log('Recognition scores:', scores.map(s => `${s.digit}:${s.score.toFixed(3)}`).join(' '));
+  console.log('Best:', bestDigit, 'score:', bestScore);
   return { digit: bestDigit, score: Math.max(0, bestScore) };
 }
 
