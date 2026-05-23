@@ -39,7 +39,7 @@ function greedyCloudMatch(pts: Point[], tmpl: Point[]): number {
   // Average distance per point — produces a comparable metric regardless of n
   const avgDistance = minDistance / n;
   // Convert distance to similarity score (0..1) using exponential decay
-  return Math.exp(-avgDistance / 30);
+  return Math.exp(-avgDistance / 20);
 }
 
 function cloudDistance(pts: Point[], tmpl: Point[], start: number): number {
