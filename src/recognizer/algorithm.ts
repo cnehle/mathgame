@@ -3,8 +3,6 @@ import type { Point, RecognizerTemplate, RecognitionResult } from '../types';
 const NUM_POINTS = 64;
 const SQUARE_SIZE = 250;
 const ORIGIN: Point = { x: 0, y: 0 };
-const DIAGONAL = Math.sqrt(SQUARE_SIZE * SQUARE_SIZE + SQUARE_SIZE * SQUARE_SIZE);
-const HALF_DIAGONAL = DIAGONAL / 2;
 
 export function recognize(
   points: Point[],
@@ -30,7 +28,7 @@ export function recognize(
 
 function greedyCloudMatch(pts: Point[], tmpl: Point[]): number {
   const n = pts.length;
-  const step = Math.floor(Math.pow(n, 0.5));
+  const step = Math.max(1, Math.floor(Math.pow(n, 0.5)));
   let minDistance = Infinity;
 
   for (let i = 0; i < n; i += step) {
@@ -38,7 +36,10 @@ function greedyCloudMatch(pts: Point[], tmpl: Point[]): number {
     const d2 = cloudDistance(tmpl, pts, i);
     minDistance = Math.min(minDistance, Math.min(d1, d2));
   }
-  return 1 - minDistance / HALF_DIAGONAL;
+  // Average distance per point — produces a comparable metric regardless of n
+  const avgDistance = minDistance / n;
+  // Convert distance to similarity score (0..1) using exponential decay
+  return Math.exp(-avgDistance / 30);
 }
 
 function cloudDistance(pts: Point[], tmpl: Point[], start: number): number {
