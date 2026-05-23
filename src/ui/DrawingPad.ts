@@ -15,7 +15,6 @@ export class DrawingPad {
   private isDrawing = false;
   private correctAnswer = 0;
   private onRecognizedCb: RecognizedCallback | null = null;
-  private hintEl: SVGTextElement | null = null;
 
   private container: HTMLElement;
 
@@ -54,24 +53,12 @@ export class DrawingPad {
       this.svg.appendChild(vLine);
     }
 
-    this.hintEl = document.createElementNS(ns, 'text') as SVGTextElement;
-    this.hintEl.setAttribute('x', '150');
-    this.hintEl.setAttribute('y', '165');
-    this.hintEl.setAttribute('text-anchor', 'middle');
-    this.hintEl.setAttribute('dominant-baseline', 'middle');
-    this.hintEl.setAttribute('font-family', 'Fredoka One, cursive');
-    this.hintEl.setAttribute('font-size', '160');
-    this.hintEl.setAttribute('fill', 'rgba(0,0,0,0.06)');
-    this.hintEl.textContent = '?';
-    this.svg.appendChild(this.hintEl);
-
     container.appendChild(this.svg);
     this.bindEvents();
   }
 
   setCorrectAnswer(n: number): void {
     this.correctAnswer = n;
-    if (this.hintEl) this.hintEl.textContent = String(n);
   }
 
   onRecognized(cb: RecognizedCallback): void {
@@ -84,7 +71,7 @@ export class DrawingPad {
       return;
     }
     const result = recognize(this.points, DIGIT_TEMPLATES);
-    const correct = result.digit === this.correctAnswer && result.score > 0.55;
+    const correct = result.digit === this.correctAnswer && result.score > 0.15;
     if (correct) this.animateSuccess();
     else this.animateFailure();
     setTimeout(() => {
@@ -97,7 +84,6 @@ export class DrawingPad {
     this.points = [];
     this.currentPath = null;
     this.isDrawing = false;
-    if (this.hintEl) this.hintEl.setAttribute('fill', 'rgba(0,0,0,0.06)');
     this.svg.style.animation = '';
   }
 
@@ -179,7 +165,6 @@ export class DrawingPad {
       p.setAttribute('stroke', '#00c853');
       p.style.animation = 'drawSuccess 0.4s ease-in-out';
     });
-    if (this.hintEl) this.hintEl.setAttribute('fill', 'rgba(0,200,83,0.15)');
   }
 
   private animateFailure(): void {
