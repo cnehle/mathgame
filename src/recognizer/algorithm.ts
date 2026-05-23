@@ -1,0 +1,157 @@
+import type { Point, RecognizerTemplate, RecognitionResult } from '../types';
+
+const NUM_POINTS = 64;
+const SQUARE_SIZE = 250;
+const ORIGIN: Point = { x: 0, y: 0 };
+const DIAGONAL = Math.sqrt(SQUARE_SIZE * SQUARE_SIZE + SQUARE_SIZE * SQUARE_SIZE);
+const HALF_DIAGONAL = DIAGONAL / 2;
+
+export function recognize(
+  points: Point[],
+  templates: RecognizerTemplate[]
+): RecognitionResult {
+  const candidate = normalize(points);
+  let bestScore = -Infinity;
+  let bestDigit = -1;
+
+  for (const tmpl of templates) {
+    const score = greedyCloudMatch(candidate, tmpl.points);
+    if (score > bestScore) {
+      bestScore = score;
+      bestDigit = tmpl.digit;
+    }
+  }
+  return { digit: bestDigit, score: Math.max(0, bestScore) };
+}
+
+function greedyCloudMatch(pts: Point[], tmpl: Point[]): number {
+  const n = pts.length;
+  const step = Math.floor(Math.pow(n, 0.5));
+  let minDistance = Infinity;
+
+  for (let i = 0; i < n; i += step) {
+    const d1 = cloudDistance(pts, tmpl, i);
+    const d2 = cloudDistance(tmpl, pts, i);
+    minDistance = Math.min(minDistance, Math.min(d1, d2));
+  }
+  return 1 - minDistance / HALF_DIAGONAL;
+}
+
+function cloudDistance(pts: Point[], tmpl: Point[], start: number): number {
+  const n = pts.length;
+  const matched = new Array<boolean>(n).fill(false);
+  let sum = 0;
+  let i = start;
+
+  do {
+    let minIdx = -1;
+    let minDist = Infinity;
+    for (let j = 0; j < n; j++) {
+      if (!matched[j]) {
+        const d = dist(pts[i], tmpl[j]);
+        if (d < minDist) {
+          minDist = d;
+          minIdx = j;
+        }
+      }
+    }
+    matched[minIdx] = true;
+    const weight = 1 - ((i - start + n) % n) / n;
+    sum += weight * minDist;
+    i = (i + 1) % n;
+  } while (i !== start);
+
+  return sum;
+}
+
+export function normalize(points: Point[]): Point[] {
+  let pts = resample(points, NUM_POINTS);
+  const radians = indicativeAngle(pts);
+  pts = rotateBy(pts, -radians);
+  pts = scaleTo(pts, SQUARE_SIZE);
+  pts = translateTo(pts, ORIGIN);
+  return pts;
+}
+
+function resample(points: Point[], n: number): Point[] {
+  const I = pathLength(points) / (n - 1);
+  let D = 0;
+  const newPoints: Point[] = [{ ...points[0] }];
+
+  for (let i = 1; i < points.length; i++) {
+    const d = dist(points[i - 1], points[i]);
+    if (D + d >= I) {
+      const qx = points[i - 1].x + ((I - D) / d) * (points[i].x - points[i - 1].x);
+      const qy = points[i - 1].y + ((I - D) / d) * (points[i].y - points[i - 1].y);
+      const q: Point = { x: qx, y: qy };
+      newPoints.push(q);
+      points = [q, ...points.slice(i)];
+      i = 1;
+      D = 0;
+    } else {
+      D += d;
+    }
+  }
+  if (newPoints.length === n - 1) {
+    newPoints.push({ ...points[points.length - 1] });
+  }
+  return newPoints;
+}
+
+function indicativeAngle(points: Point[]): number {
+  const c = centroid(points);
+  return Math.atan2(c.y - points[0].y, c.x - points[0].x);
+}
+
+function rotateBy(points: Point[], radians: number): Point[] {
+  const c = centroid(points);
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return points.map((p) => ({
+    x: (p.x - c.x) * cos - (p.y - c.y) * sin + c.x,
+    y: (p.x - c.x) * sin + (p.y - c.y) * cos + c.y,
+  }));
+}
+
+function scaleTo(points: Point[], size: number): Point[] {
+  const b = boundingBox(points);
+  return points.map((p) => ({
+    x: p.x * (size / b.width),
+    y: p.y * (size / b.height),
+  }));
+}
+
+function translateTo(points: Point[], pt: Point): Point[] {
+  const c = centroid(points);
+  return points.map((p) => ({
+    x: p.x + pt.x - c.x,
+    y: p.y + pt.y - c.y,
+  }));
+}
+
+function dist(a: Point, b: Point): number {
+  return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+}
+
+function pathLength(points: Point[]): number {
+  let d = 0;
+  for (let i = 1; i < points.length; i++) d += dist(points[i - 1], points[i]);
+  return d;
+}
+
+function centroid(points: Point[]): Point {
+  const x = points.reduce((s, p) => s + p.x, 0) / points.length;
+  const y = points.reduce((s, p) => s + p.y, 0) / points.length;
+  return { x, y };
+}
+
+function boundingBox(points: Point[]): { width: number; height: number } {
+  const minX = Math.min(...points.map((p) => p.x));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const minY = Math.min(...points.map((p) => p.y));
+  const maxY = Math.max(...points.map((p) => p.y));
+  return {
+    width: Math.max(maxX - minX, 1),
+    height: Math.max(maxY - minY, 1),
+  };
+}

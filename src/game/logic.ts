@@ -5,38 +5,55 @@ import { buildObjectsSVG } from '../shapes/layout';
 export const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
   easy: {
     label: 'Easy',
-    labelRu: '🐣 Лёгкий',
+    labelRu: 'Лёгкий',
     maxCount: 5,
     useAddition: false,
     useSubtraction: false,
     timeLimit: null,
+    drawingMode: false,
   },
   medium: {
     label: 'Medium',
-    labelRu: '🚀 Средний',
+    labelRu: 'Средний',
     maxCount: 8,
     useAddition: true,
     useSubtraction: false,
     timeLimit: 90,
+    drawingMode: false,
   },
   hard: {
     label: 'Hard',
-    labelRu: '🔥 Сложный',
+    labelRu: 'Сложный',
     maxCount: 10,
     useAddition: true,
     useSubtraction: true,
     timeLimit: 60,
+    drawingMode: false,
+  },
+  drawing: {
+    label: 'Drawing',
+    labelRu: 'Рисование',
+    maxCount: 9,
+    useAddition: false,
+    useSubtraction: false,
+    timeLimit: null,
+    drawingMode: true,
   },
 };
 
 export class QuestionGenerator {
   private svgEl: SVGSVGElement;
-  constructor(svgEl: SVGSVGElement) { this.svgEl = svgEl; }
+
+  constructor(svgEl: SVGSVGElement) {
+    this.svgEl = svgEl;
+  }
 
   generate(qIdx: number, difficulty: Difficulty): Question {
     const cfg = DIFFICULTY_CONFIG[difficulty];
 
-    // Decide question type based on index + difficulty
+    if (cfg.drawingMode) {
+      return this.makeCount(qIdx, cfg.maxCount);
+    }
     if (!cfg.useAddition || qIdx < 3) {
       return this.makeCount(qIdx, cfg.maxCount);
     }
@@ -51,11 +68,8 @@ export class QuestionGenerator {
   }
 
   private makeCount(qIdx: number, maxCount: number): Question {
-    const maxN = Math.min(
-      maxCount,
-      qIdx < 3 ? 5 : qIdx < 6 ? 8 : 10
-    );
-    const minN = qIdx < 3 ? 1 : qIdx < 6 ? 2 : 4;
+    const maxN = Math.min(maxCount, qIdx < 3 ? 5 : qIdx < 6 ? 8 : 9);
+    const minN = qIdx < 3 ? 1 : 2;
     const n = rand(minN, maxN);
     const sh = randomShape();
     buildObjectsSVG(this.svgEl, n, sh);

@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet"/>
-  <script type="module" crossorigin src="/mathgame/assets/index-DAN3ZjZh.js"></script>
-  <link rel="stylesheet" crossorigin href="/mathgame/assets/index-BoLSA8vF.css">
+  <script type="module" crossorigin src="/mathgame/assets/index-Brcv6HyE.js"></script>
+  <link rel="stylesheet" crossorigin href="/mathgame/assets/index-BjDOCluX.css">
 </head>
 <body>
 
@@ -32,45 +32,124 @@
   <circle id="moon" cx="880" cy="72" r="46" fill="#ffe566" opacity=".85">
     <animate attributeName="opacity" values=".85;.95;.85" dur="5s" repeatCount="indefinite"/>
   </circle>
-  <circle id="moon-shadow" cx="902" cy="57" r="37" fill="#110e3a"/>
+  <circle cx="902" cy="57" r="37" fill="#110e3a"/>
 </svg>
 
+<!-- ══ MENU ══ -->
 <div id="menu-screen" class="screen">
   <div class="menu-content">
     <h1 class="title">&#11088; Считай и играй &#11088;</h1>
     <p class="subtitle">Выбери уровень сложности</p>
+
+    <svg id="morph-svg" class="morph-decoration"
+         viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"></svg>
+
     <div class="diff-grid">
+
+      <!-- Лёгкий — черепаха -->
       <button class="diff-btn" data-diff="easy">
         <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
           <rect x="4" y="4" width="112" height="112" rx="28" fill="#6BFFB8" stroke="#1a6a46" stroke-width="3"/>
           <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
-          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#004d20">&#128035;</text>
+          <ellipse cx="60" cy="68" rx="28" ry="20" fill="#27ae60" stroke="#1a6e3c" stroke-width="2"/>
+          <ellipse cx="60" cy="62" rx="22" ry="17" fill="#2ecc71" stroke="#1a6e3c" stroke-width="2"/>
+          <ellipse cx="60" cy="62" rx="10" ry="8" fill="#27ae60" stroke="#1a6e3c" stroke-width="1.5"/>
+          <line x1="60" y1="45" x2="60" y2="79" stroke="#1a6e3c" stroke-width="1.5"/>
+          <line x1="38" y1="62" x2="82" y2="62" stroke="#1a6e3c" stroke-width="1.5"/>
+          <ellipse cx="60" cy="44" rx="10" ry="9" fill="#27ae60" stroke="#1a6e3c" stroke-width="2"/>
+          <circle cx="56" cy="41" r="2" fill="#1a3a10"/>
+          <circle cx="64" cy="41" r="2" fill="#1a3a10"/>
+          <ellipse cx="36" cy="72" rx="7" ry="5" fill="#27ae60" stroke="#1a6e3c" stroke-width="1.5" transform="rotate(-20,36,72)"/>
+          <ellipse cx="84" cy="72" rx="7" ry="5" fill="#27ae60" stroke="#1a6e3c" stroke-width="1.5" transform="rotate(20,84,72)"/>
+          <ellipse cx="38" cy="82" rx="6" ry="4" fill="#27ae60" stroke="#1a6e3c" stroke-width="1.5" transform="rotate(10,38,82)"/>
+          <ellipse cx="82" cy="82" rx="6" ry="4" fill="#27ae60" stroke="#1a6e3c" stroke-width="1.5" transform="rotate(-10,82,82)"/>
         </svg>
         <span>Лёгкий</span>
         <small>счёт до 5 · без таймера</small>
       </button>
+
+      <!-- Средний — заяц -->
       <button class="diff-btn" data-diff="medium">
         <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
           <rect x="4" y="4" width="112" height="112" rx="28" fill="#FFD93D" stroke="#8a5c00" stroke-width="3"/>
           <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
-          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#5a3c00">&#128640;</text>
+          <ellipse cx="47" cy="36" rx="8" ry="20" fill="#f5f5f5" stroke="#ccc" stroke-width="2"/>
+          <ellipse cx="73" cy="36" rx="8" ry="20" fill="#f5f5f5" stroke="#ccc" stroke-width="2"/>
+          <ellipse cx="47" cy="36" rx="4" ry="15" fill="#ffb3c1"/>
+          <ellipse cx="73" cy="36" rx="4" ry="15" fill="#ffb3c1"/>
+          <ellipse cx="60" cy="80" rx="22" ry="20" fill="#f5f5f5" stroke="#ccc" stroke-width="2"/>
+          <circle cx="60" cy="60" r="17" fill="#f5f5f5" stroke="#ccc" stroke-width="2"/>
+          <circle cx="54" cy="57" r="3" fill="#333"/>
+          <circle cx="66" cy="57" r="3" fill="#333"/>
+          <circle cx="55" cy="56" r="1" fill="white"/>
+          <circle cx="67" cy="56" r="1" fill="white"/>
+          <ellipse cx="60" cy="63" rx="4" ry="3" fill="#ffb3c1"/>
+          <path d="M55,66 Q60,70 65,66" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="40" y1="62" x2="55" y2="64" stroke="#ccc" stroke-width="1"/>
+          <line x1="40" y1="66" x2="55" y2="66" stroke="#ccc" stroke-width="1"/>
+          <line x1="65" y1="64" x2="80" y2="62" stroke="#ccc" stroke-width="1"/>
+          <line x1="65" y1="66" x2="80" y2="66" stroke="#ccc" stroke-width="1"/>
         </svg>
         <span>Средний</span>
-        <small>до 8 · сложение · 90 сек</small>
+        <small>до 8 · сложение · 1.5 мин</small>
       </button>
+
+      <!-- Сложный — гепард -->
       <button class="diff-btn" data-diff="hard">
         <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
           <rect x="4" y="4" width="112" height="112" rx="28" fill="#FF6B9D" stroke="#8a1040" stroke-width="3"/>
           <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
-          <text x="60" y="68" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="52" fill="#5a0020">&#128293;</text>
+          <ellipse cx="60" cy="78" rx="24" ry="16" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+          <circle cx="60" cy="56" r="18" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+          <circle cx="50" cy="74" r="4" fill="#c0392b" opacity=".7"/>
+          <circle cx="62" cy="70" r="3.5" fill="#c0392b" opacity=".7"/>
+          <circle cx="72" cy="76" r="4" fill="#c0392b" opacity=".7"/>
+          <circle cx="55" cy="83" r="3" fill="#c0392b" opacity=".7"/>
+          <circle cx="52" cy="50" r="3" fill="#c0392b" opacity=".6"/>
+          <circle cx="67" cy="52" r="2.5" fill="#c0392b" opacity=".6"/>
+          <circle cx="60" cy="45" r="2.5" fill="#c0392b" opacity=".6"/>
+          <ellipse cx="53" cy="53" rx="4" ry="4.5" fill="white"/>
+          <ellipse cx="67" cy="53" rx="4" ry="4.5" fill="white"/>
+          <circle cx="53" cy="54" r="2.5" fill="#2c3e50"/>
+          <circle cx="67" cy="54" r="2.5" fill="#2c3e50"/>
+          <circle cx="54" cy="53" r="1" fill="white"/>
+          <circle cx="68" cy="53" r="1" fill="white"/>
+          <path d="M50,59 Q48,65 47,70" fill="none" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+          <path d="M70,59 Q72,65 73,70" fill="none" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="60" cy="62" rx="5" ry="3.5" fill="#e8856a"/>
+          <path d="M55,65 Q60,69 65,65" fill="none" stroke="#e67e22" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="44,40 38,28 52,34" fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+          <polygon points="76,40 82,28 68,34" fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+          <line x1="18" y1="72" x2="34" y2="72" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+          <line x1="14" y1="78" x2="32" y2="78" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".4"/>
+          <line x1="18" y1="84" x2="33" y2="84" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
         </svg>
         <span>Сложный</span>
-        <small>до 10 · вычитание · 60 сек</small>
+        <small>до 10 · вычитание · 1 мин</small>
       </button>
+
+      <!-- Рисование — карандаш -->
+      <button class="diff-btn" data-diff="drawing">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="112" height="112" rx="28" fill="#C3B1E1" stroke="#5a3e8a" stroke-width="3"/>
+          <rect x="12" y="12" width="40" height="18" rx="9" fill="rgba(255,255,255,.35)"/>
+          <rect x="50" y="25" width="20" height="55" rx="4" fill="#FFD93D" stroke="#c8880a" stroke-width="2"/>
+          <rect x="50" y="25" width="20" height="10" rx="4" fill="#FF6B9D" stroke="#8a1040" stroke-width="2"/>
+          <path d="M50,80 L60,100 L70,80 Z" fill="#d4956a" stroke="#a0632a" stroke-width="2"/>
+          <path d="M55,88 L60,100 L65,88 Z" fill="#555"/>
+          <line x1="50" y1="42" x2="70" y2="42" stroke="#c8880a" stroke-width="1" opacity=".4"/>
+          <line x1="50" y1="50" x2="70" y2="50" stroke="#c8880a" stroke-width="1" opacity=".4"/>
+          <path d="M22,88 Q30,76 40,84 Q50,92 58,72" fill="none" stroke="#7d5db5" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span>Рисование</span>
+        <small>нарисуй ответ · без таймера</small>
+      </button>
+
     </div>
   </div>
 </div>
 
+<!-- ══ GAME ══ -->
 <div id="game-screen" class="screen hidden">
   <div id="app">
     <h1 class="title-sm">&#11088; Считай и играй &#11088;</h1>
@@ -84,12 +163,20 @@
       <svg id="obj-svg" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div id="answers" class="answers"></div>
+    <div id="draw-wrap" class="draw-wrap" style="display:none">
+      <div id="drawing-pad-container" class="drawing-pad-container"></div>
+      <div class="draw-controls">
+        <button id="draw-check-btn" class="btn-mint">&#10003; Проверить</button>
+        <button id="draw-clear-btn" class="btn-ghost">&#10005; Стереть</button>
+      </div>
+    </div>
     <div id="feedback" class="feedback"></div>
     <button id="next-btn" class="next-btn">Дальше &#10152;</button>
     <p class="scroll-hint">&#8595; прокрути или нажми кнопку</p>
   </div>
 </div>
 
+<!-- ══ COMPLETE ══ -->
 <div id="complete-screen" class="screen hidden">
   <div class="complete-content">
     <svg viewBox="0 0 160 160" class="trophy-svg" xmlns="http://www.w3.org/2000/svg">
@@ -100,6 +187,7 @@
     </svg>
     <h2 class="complete-title">Молодец!</h2>
     <p id="final-txt" class="final-txt"></p>
+    <div id="results-chart" class="results-chart"></div>
     <div class="complete-btns">
       <button id="restart-btn" class="btn-mint">Ещё раз &#128260;</button>
       <button id="newgame-btn" class="btn-yellow">Сменить уровень &#127918;</button>
