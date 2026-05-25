@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import { MnistData } from './training-loader';
 
-const MODEL_STORAGE_KEY = 'indexeddb://mathgame-mnist-model';
+const MODEL_STORAGE_KEY = 'indexeddb://mathgame-mnist-model-v2';
 const IMAGE_SIZE = 28;
 const NUM_CLASSES = 10;
 
@@ -47,42 +47,56 @@ export class NeuralRecognizer {
   }
 
   private buildModel(): tf.LayersModel {
-    const model = tf.sequential();
+  const model = tf.sequential();
 
-    // First conv layer
-    model.add(
-      tf.layers.conv2d({
-        inputShape: [IMAGE_SIZE, IMAGE_SIZE, 1],
-        kernelSize: 5,
-        filters: 8,
-        strides: 1,
-        activation: 'relu',
-        kernelInitializer: 'varianceScaling',
-      })
-    );
-    model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
+  // First conv block — 16 filters
+  model.add(
+    tf.layers.conv2d({
+      inputShape: [IMAGE_SIZE, IMAGE_SIZE, 1],
+      kernelSize: 3,
+      filters: 16,
+      strides: 1,
+      activation: 'relu',
+      kernelInitializer: 'varianceScaling',
+    })
+  );
+  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
 
-    // Second conv layer
-    model.add(
-      tf.layers.conv2d({
-        kernelSize: 5,
-        filters: 16,
-        strides: 1,
-        activation: 'relu',
-        kernelInitializer: 'varianceScaling',
-      })
-    );
-    model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
+  // Second conv block — 32 filters
+  model.add(
+    tf.layers.conv2d({
+      kernelSize: 3,
+      filters: 32,
+      strides: 1,
+      activation: 'relu',
+      kernelInitializer: 'varianceScaling',
+    })
+  );
+  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
 
-    // Flatten + dense output layer
-    model.add(tf.layers.flatten());
-    model.add(
-      tf.layers.dense({
-        units: NUM_CLASSES,
-        kernelInitializer: 'varianceScaling',
-        activation: 'softmax',
-      })
-    );
+  // Dropout for better generalization
+  model.add(tf.layers.dropout({ rate: 0.25 }));
+
+  model.add(tf.layers.flatten());
+
+  // Dense hidden layer
+  model.add(
+    tf.layers.dense({
+      units: 128,
+      activation: 'relu',
+      kernelInitializer: 'varianceScaling',
+    })
+  );
+  model.add(tf.layers.dropout({ rate: 0.5 }));
+
+  // Output layer
+  model.add(
+    tf.layers.dense({
+      units: NUM_CLASSES,
+      kernelInitializer: 'varianceScaling',
+      activation: 'softmax',
+    })
+  );
 
     model.compile({
       optimizer: tf.train.adam(),
@@ -99,9 +113,9 @@ export class NeuralRecognizer {
   ): Promise<void> {
     if (!this.model) throw new Error('Model not built');
 
-    const BATCH_SIZE = 64;
-    const TRAIN_BATCHES = 100;
-    const TEST_BATCH_SIZE = 200;
+    const BATCH_SIZE = 128;
+    const TRAIN_BATCHES = 400;
+    const TEST_BATCH_SIZE = 1000;
 
     for (let i = 0; i < TRAIN_BATCHES; i++) {
       const batch = data.nextTrainBatch(BATCH_SIZE);
