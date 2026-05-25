@@ -149,27 +149,68 @@ export class NeuralRecognizer {
   }
 
   predict(imageData: Float32Array): NeuralRecognitionResult {
-    if (!this.model || !this.isReady) {
-      throw new Error('Recognizer not initialized');
+  if (!this.model || !this.isReady) {
+    throw new Error('Recognizer not initialized');
+  }
+
+  return tf.tidy(() => {
+    const input = tf.tensor4d(imageData, [1, IMAGE_SIZE, IMAGE_SIZE, 1]);
+    const output = this.model!.predict(input) as tf.Tensor;
+    const scores = Array.from(output.dataSync());
+
+    // Heuristic: if model can't decide between 1 and 7,
+    // check the top-row activity — sevens have a horizontal stroke on top
+    const topRowActivity = this.computeTopRowActivity(imageData);
+    if (scores[1] > 0.3 && topRowActivity > 0.15 && scores[7] > 0.05) {
+      // Boost the 7 score since drawing has a clear top stroke
+      scores[7] = Math.max(scores[7], scores[1] * 1.2);
     }
 
-    return tf.tidy(() => {
-      const input = tf.tensor4d(imageData, [1, IMAGE_SIZE, IMAGE_SIZE, 1]);
-      const output = this.model!.predict(input) as tf.Tensor;
-      const scores = Array.from(output.dataSync());
-
-      let bestDigit = 0;
-      let bestScore = scores[0];
-      for (let i = 1; i < scores.length; i++) {
-        if (scores[i] > bestScore) {
-          bestScore = scores[i];
-          bestDigit = i;
-        }
+    let bestDigit = 0;
+    let bestScore = scores[0];
+    for (let i = 1; i < scores.length; i++) {
+      if (scores[i] > bestScore) {
+        bestScore = scores[i];
+        bestDigit = i;
       }
+    }
 
-      return { digit: bestDigit, score: bestScore, allScores: scores };
-    });
+    return { digit: bestDigit, score: bestScore, allScores: scores };
+  });
+}
+
+/**
+ * Measures how much "ink" is present in the top 4 rows of the 28×28 image.
+ * Sevens typically have a long horizontal stroke at the top; ones don't.
+ */
+private computeTopRowActivity(imageData: Float32Array): number {
+  let topActivity = 0;
+  let totalActivity = 0;
+  for (let y = 0; y < 28; y++) {
+    for (let x = 0; x < 28; x++) {
+      const pixel = imageData[y * 28 + x];
+      totalActivity += pixel;
+      if (y < 6) topActivity += pixel;
+    }
   }
+  if (totalActivity < 1) return 0;
+  // What fraction of the digit is in the top 6 rows?
+  const fraction = topActivity / totalActivity;
+  // Also check horizontal spread in top rows
+  let topWidth = 0;
+  for (let x = 0; x < 28; x++) {
+    let hasInk = false;
+    for (let y = 0; y < 6; y++) {
+      if (imageData[y * 28 + x] > 0.3) {
+        hasInk = true;
+        break;
+      }
+    }
+    if (hasInk) topWidth++;
+  }
+  // Return a combined "topness" score
+  return fraction * (topWidth / 28);
+}
 
   ready(): boolean {
     return this.isReady;
