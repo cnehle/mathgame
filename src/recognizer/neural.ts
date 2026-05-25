@@ -158,13 +158,18 @@ export class NeuralRecognizer {
     const output = this.model!.predict(input) as tf.Tensor;
     const scores = Array.from(output.dataSync());
 
-    // Heuristic: if model can't decide between 1 and 7,
-    // check the top-row activity — sevens have a horizontal stroke on top
-    const topRowActivity = this.computeTopRowActivity(imageData);
-    if (scores[1] > 0.3 && topRowActivity > 0.15 && scores[7] > 0.05) {
-      // Boost the 7 score since drawing has a clear top stroke
-      scores[7] = Math.max(scores[7], scores[1] * 1.2);
-    }
+    // Detect "seven with crossbar" — common in European/Russian writing.
+// Pattern: long horizontal stroke at top + diagonal/vertical descending stroke
+// + sometimes a small horizontal stroke in the middle. MNIST never saw this.
+const features = this.analyzeStrokeGeometry(imageData);
+if (features.hasTopBar && features.descendsLeftward) {
+  // Likely a 7 — boost its score significantly
+  const boost = features.hasMiddleBar ? 0.6 : 0.4;
+  scores[7] = Math.max(scores[7], boost);
+  // Suppress 1 and 2 if their score was based on misreading the 7
+  if (scores[1] > 0.3) scores[1] *= 0.3;
+  if (scores[2] > 0.3) scores[2] *= 0.3;
+}
 
     let bestDigit = 0;
     let bestScore = scores[0];
@@ -179,37 +184,53 @@ export class NeuralRecognizer {
   });
 }
 
-/**
- * Measures how much "ink" is present in the top 4 rows of the 28×28 image.
- * Sevens typically have a long horizontal stroke at the top; ones don't.
- */
-private computeTopRowActivity(imageData: Float32Array): number {
-  let topActivity = 0;
-  let totalActivity = 0;
+private analyzeStrokeGeometry(imageData: Float32Array): {
+  hasTopBar: boolean;
+  hasMiddleBar: boolean;
+  descendsLeftward: boolean;
+} {
+  // Find leftmost & rightmost ink positions per row
+  const rowExtents: Array<{ left: number; right: number; ink: number }> = [];
   for (let y = 0; y < 28; y++) {
+    let left = -1, right = -1, ink = 0;
     for (let x = 0; x < 28; x++) {
-      const pixel = imageData[y * 28 + x];
-      totalActivity += pixel;
-      if (y < 6) topActivity += pixel;
-    }
-  }
-  if (totalActivity < 1) return 0;
-  // What fraction of the digit is in the top 6 rows?
-  const fraction = topActivity / totalActivity;
-  // Also check horizontal spread in top rows
-  let topWidth = 0;
-  for (let x = 0; x < 28; x++) {
-    let hasInk = false;
-    for (let y = 0; y < 6; y++) {
       if (imageData[y * 28 + x] > 0.3) {
-        hasInk = true;
-        break;
+        if (left === -1) left = x;
+        right = x;
+        ink++;
       }
     }
-    if (hasInk) topWidth++;
+    rowExtents.push({ left, right, ink });
   }
-  // Return a combined "topness" score
-  return fraction * (topWidth / 28);
+
+  // Top bar: rows 0-7 with wide horizontal ink (>40% of width)
+  let topBarRows = 0;
+  for (let y = 0; y < 8; y++) {
+    if (rowExtents[y].ink > 11) topBarRows++;
+  }
+  const hasTopBar = topBarRows >= 2;
+
+  // Middle bar: rows 11-17 with horizontal stroke wider than just the diagonal
+  let middleBarRows = 0;
+  for (let y = 11; y < 18; y++) {
+    if (rowExtents[y].ink > 8) middleBarRows++;
+  }
+  const hasMiddleBar = middleBarRows >= 2;
+
+  // Diagonal descending leftward: compare ink centroid in top rows vs bottom rows
+  let topCenterX = 0, topCount = 0;
+  let bottomCenterX = 0, bottomCount = 0;
+  for (let y = 0; y < 28; y++) {
+    if (rowExtents[y].left === -1) continue;
+    const center = (rowExtents[y].left + rowExtents[y].right) / 2;
+    if (y < 10) { topCenterX += center; topCount++; }
+    if (y > 18) { bottomCenterX += center; bottomCount++; }
+  }
+  const topAvg = topCount > 0 ? topCenterX / topCount : 14;
+  const bottomAvg = bottomCount > 0 ? bottomCenterX / bottomCount : 14;
+  const descendsLeftward = topAvg > bottomAvg + 2;
+
+  return { hasTopBar, hasMiddleBar, descendsLeftward };
 }
 
   ready(): boolean {
