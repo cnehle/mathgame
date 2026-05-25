@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import { MnistData } from './training-loader';
 
-const MODEL_STORAGE_KEY = 'indexeddb://mathgame-mnist-model-v2';
+const MODEL_STORAGE_KEY = 'indexeddb://mathgame-mnist-model-v3';
 const IMAGE_SIZE = 28;
 const NUM_CLASSES = 10;
 
@@ -49,104 +49,168 @@ export class NeuralRecognizer {
   private buildModel(): tf.LayersModel {
   const model = tf.sequential();
 
-  // First conv block — 16 filters
+  // ── Conv block 1 ──
   model.add(
     tf.layers.conv2d({
       inputShape: [IMAGE_SIZE, IMAGE_SIZE, 1],
       kernelSize: 3,
-      filters: 16,
-      strides: 1,
+      filters: 32,
+      padding: 'same',
       activation: 'relu',
-      kernelInitializer: 'varianceScaling',
+      kernelInitializer: 'heNormal',
     })
   );
-  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
-
-  // Second conv block — 32 filters
+  model.add(tf.layers.batchNormalization());
   model.add(
     tf.layers.conv2d({
       kernelSize: 3,
       filters: 32,
-      strides: 1,
+      padding: 'same',
       activation: 'relu',
-      kernelInitializer: 'varianceScaling',
+      kernelInitializer: 'heNormal',
     })
   );
-  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2], strides: [2, 2] }));
-
-  // Dropout for better generalization
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2] }));
   model.add(tf.layers.dropout({ rate: 0.25 }));
 
-  model.add(tf.layers.flatten());
-
-  // Dense hidden layer
+  // ── Conv block 2 ──
   model.add(
-    tf.layers.dense({
-      units: 128,
+    tf.layers.conv2d({
+      kernelSize: 3,
+      filters: 64,
+      padding: 'same',
       activation: 'relu',
-      kernelInitializer: 'varianceScaling',
+      kernelInitializer: 'heNormal',
     })
   );
+  model.add(tf.layers.batchNormalization());
+  model.add(
+    tf.layers.conv2d({
+      kernelSize: 3,
+      filters: 64,
+      padding: 'same',
+      activation: 'relu',
+      kernelInitializer: 'heNormal',
+    })
+  );
+  model.add(tf.layers.batchNormalization());
+  model.add(tf.layers.maxPooling2d({ poolSize: [2, 2] }));
+  model.add(tf.layers.dropout({ rate: 0.25 }));
+
+  // ── Dense layers ──
+  model.add(tf.layers.flatten());
+  model.add(
+    tf.layers.dense({
+      units: 256,
+      activation: 'relu',
+      kernelInitializer: 'heNormal',
+    })
+  );
+  model.add(tf.layers.batchNormalization());
   model.add(tf.layers.dropout({ rate: 0.5 }));
 
-  // Output layer
+  // ── Output layer ──
   model.add(
     tf.layers.dense({
       units: NUM_CLASSES,
-      kernelInitializer: 'varianceScaling',
       activation: 'softmax',
+      kernelInitializer: 'heNormal',
     })
   );
 
-    model.compile({
-      optimizer: tf.train.adam(),
-      loss: 'categoricalCrossentropy',
-      metrics: ['accuracy'],
-    });
+  model.compile({
+    optimizer: tf.train.adam(0.001),
+    loss: 'categoricalCrossentropy',
+    metrics: ['accuracy'],
+  });
 
-    return model;
-  }
+  return model;
+}
 
   private async train(
-    data: MnistData,
-    onProgress?: (pct: number) => void
-  ): Promise<void> {
-    if (!this.model) throw new Error('Model not built');
+  data: MnistData,
+  onProgress?: (pct: number) => void
+): Promise<void> {
+  if (!this.model) throw new Error('Model not built');
 
-    const BATCH_SIZE = 128;
-    const TRAIN_BATCHES = 400;
-    const TEST_BATCH_SIZE = 1000;
+  const BATCH_SIZE = 128;
+  const TRAIN_BATCHES = 800;
+  const TEST_BATCH_SIZE = 1000;
 
-    for (let i = 0; i < TRAIN_BATCHES; i++) {
-      const batch = data.nextTrainBatch(BATCH_SIZE);
-      const xs = batch.xs.reshape([BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]);
+  for (let i = 0; i < TRAIN_BATCHES; i++) {
+    const batch = data.nextTrainBatch(BATCH_SIZE);
 
-      await this.model.fit(xs, batch.labels, {
-        batchSize: BATCH_SIZE,
-        epochs: 1,
-      });
+    // Reshape to image format and apply augmentation
+    const xs = tf.tidy(() => {
+      const reshaped = batch.xs.reshape([BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]);
+      return this.augment(reshaped);
+    });
 
-      xs.dispose();
-      batch.xs.dispose();
-      batch.labels.dispose();
+    await this.model.fit(xs, batch.labels, {
+      batchSize: BATCH_SIZE,
+      epochs: 1,
+      verbose: 0,
+    });
 
-      onProgress?.((i + 1) / TRAIN_BATCHES * 100);
+    xs.dispose();
+    batch.xs.dispose();
+    batch.labels.dispose();
 
-      // Yield to UI thread so progress bar updates
+    onProgress?.(((i + 1) / TRAIN_BATCHES) * 100);
+
+    // Yield to UI thread every 5 batches so progress bar updates
+    if (i % 5 === 0) {
       await new Promise((r) => setTimeout(r, 0));
     }
-
-    // Quick test
-    const testBatch = data.nextTestBatch(TEST_BATCH_SIZE);
-    const testXs = testBatch.xs.reshape([TEST_BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]);
-    const evalResult = this.model.evaluate(testXs, testBatch.labels) as tf.Scalar[];
-    const accuracy = (await evalResult[1].data())[0];
-    console.log(`Точность на тестовом наборе: ${(accuracy * 100).toFixed(1)}%`);
-
-    testXs.dispose();
-    testBatch.xs.dispose();
-    testBatch.labels.dispose();
   }
+
+  // Evaluate on test set
+  const testBatch = data.nextTestBatch(TEST_BATCH_SIZE);
+  const testXs = testBatch.xs.reshape([
+    TEST_BATCH_SIZE,
+    IMAGE_SIZE,
+    IMAGE_SIZE,
+    1,
+  ]);
+  const evalResult = this.model.evaluate(testXs, testBatch.labels) as tf.Scalar[];
+  const accuracy = (await evalResult[1].data())[0];
+  console.log(`Точность на тестовом наборе: ${(accuracy * 100).toFixed(2)}%`);
+
+  testXs.dispose();
+  testBatch.xs.dispose();
+  testBatch.labels.dispose();
+}
+
+/**
+ * Data augmentation — applies random shifts and zoom to make the model
+ * more robust to variations in user handwriting style.
+ */
+private augment(images: tf.Tensor): tf.Tensor {
+  return tf.tidy(() => {
+    const batchSize = images.shape[0]!;
+
+    // Random horizontal/vertical shift up to ±2 pixels
+    const shiftX = Math.floor(Math.random() * 5) - 2;
+    const shiftY = Math.floor(Math.random() * 5) - 2;
+
+    // Use padding + slicing for shift (simpler than affine transform)
+    const padded = tf.pad(images, [
+      [0, 0],
+      [2, 2],
+      [2, 2],
+      [0, 0],
+    ]);
+    const shifted = padded.slice(
+      [0, 2 + shiftY, 2 + shiftX, 0],
+      [batchSize, IMAGE_SIZE, IMAGE_SIZE, 1]
+    );
+
+    // Random brightness/contrast variation
+    const contrast = 0.85 + Math.random() * 0.3;
+    return shifted.mul(contrast).clipByValue(0, 1);
+  });
+}
 
   predict(imageData: Float32Array): NeuralRecognitionResult {
   if (!this.model || !this.isReady) {
@@ -157,19 +221,6 @@ export class NeuralRecognizer {
     const input = tf.tensor4d(imageData, [1, IMAGE_SIZE, IMAGE_SIZE, 1]);
     const output = this.model!.predict(input) as tf.Tensor;
     const scores = Array.from(output.dataSync());
-
-    // Detect "seven with crossbar" — common in European/Russian writing.
-// Pattern: long horizontal stroke at top + diagonal/vertical descending stroke
-// + sometimes a small horizontal stroke in the middle. MNIST never saw this.
-const features = this.analyzeStrokeGeometry(imageData);
-if (features.hasTopBar && features.descendsLeftward) {
-  // Likely a 7 — boost its score significantly
-  const boost = features.hasMiddleBar ? 0.6 : 0.4;
-  scores[7] = Math.max(scores[7], boost);
-  // Suppress 1 and 2 if their score was based on misreading the 7
-  if (scores[1] > 0.3) scores[1] *= 0.3;
-  if (scores[2] > 0.3) scores[2] *= 0.3;
-}
 
     let bestDigit = 0;
     let bestScore = scores[0];
@@ -182,55 +233,6 @@ if (features.hasTopBar && features.descendsLeftward) {
 
     return { digit: bestDigit, score: bestScore, allScores: scores };
   });
-}
-
-private analyzeStrokeGeometry(imageData: Float32Array): {
-  hasTopBar: boolean;
-  hasMiddleBar: boolean;
-  descendsLeftward: boolean;
-} {
-  // Find leftmost & rightmost ink positions per row
-  const rowExtents: Array<{ left: number; right: number; ink: number }> = [];
-  for (let y = 0; y < 28; y++) {
-    let left = -1, right = -1, ink = 0;
-    for (let x = 0; x < 28; x++) {
-      if (imageData[y * 28 + x] > 0.3) {
-        if (left === -1) left = x;
-        right = x;
-        ink++;
-      }
-    }
-    rowExtents.push({ left, right, ink });
-  }
-
-  // Top bar: rows 0-7 with wide horizontal ink (>40% of width)
-  let topBarRows = 0;
-  for (let y = 0; y < 8; y++) {
-    if (rowExtents[y].ink > 11) topBarRows++;
-  }
-  const hasTopBar = topBarRows >= 2;
-
-  // Middle bar: rows 11-17 with horizontal stroke wider than just the diagonal
-  let middleBarRows = 0;
-  for (let y = 11; y < 18; y++) {
-    if (rowExtents[y].ink > 8) middleBarRows++;
-  }
-  const hasMiddleBar = middleBarRows >= 2;
-
-  // Diagonal descending leftward: compare ink centroid in top rows vs bottom rows
-  let topCenterX = 0, topCount = 0;
-  let bottomCenterX = 0, bottomCount = 0;
-  for (let y = 0; y < 28; y++) {
-    if (rowExtents[y].left === -1) continue;
-    const center = (rowExtents[y].left + rowExtents[y].right) / 2;
-    if (y < 10) { topCenterX += center; topCount++; }
-    if (y > 18) { bottomCenterX += center; bottomCount++; }
-  }
-  const topAvg = topCount > 0 ? topCenterX / topCount : 14;
-  const bottomAvg = bottomCount > 0 ? bottomCenterX / bottomCount : 14;
-  const descendsLeftward = topAvg > bottomAvg + 2;
-
-  return { hasTopBar, hasMiddleBar, descendsLeftward };
 }
 
   ready(): boolean {
