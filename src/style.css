@@ -150,7 +150,9 @@ html, body {
   box-shadow: 0 6px 36px rgba(0,0,0,.35);
   display: flex; flex-direction: column;
   align-items: center; gap: clamp(4px, 1vh, 10px);
-  flex: 0 0 auto; will-change: transform, opacity;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden; will-change: transform, opacity;
 }
 
 .q-text {
@@ -159,7 +161,14 @@ html, body {
   color: var(--white); line-height: 1.2; text-align: center;
 }
 
-#obj-svg { display: block; width: 100%; height: auto; max-height: 35vh; }
+#obj-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
 
 .answers {
   display: flex; flex-wrap: wrap;
@@ -388,61 +397,35 @@ html, body {
   50%      { transform: scale(1.06); }
 }
 
-/* ════════ DRAWING MODE — flexible layout ════════ */
-
-/* Make game screen use flexbox properly so things shrink */
-#game-screen {
-  align-items: stretch;
-}
+/* ════════ DRAWING MODE — strict fit ════════ */
 
 #app {
-  /* Force the app to fit within the viewport */
   max-height: 100vh;
   overflow: hidden;
 }
 
-/* Drawing pad shrinks based on available height */
+/* Drawing pad — hard size limits */
 .drawing-pad-container {
-  width: min(50vh, 280px);
-  height: min(50vh, 280px);
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
 }
 
-@media (max-height: 900px) {
-  .drawing-pad-container {
-    width: min(35vh, 220px);
-    height: min(35vh, 220px);
-  }
-  #obj-svg { max-height: 25vh; }
+/* Drawing wrap shrinks freely */
+.draw-wrap {
+  flex-shrink: 0;
 }
 
-@media (max-height: 750px) {
-  .drawing-pad-container {
-    width: min(28vh, 180px);
-    height: min(28vh, 180px);
-  }
-  #obj-svg { max-height: 22vh; }
-  .card { padding: 6px 10px; gap: 4px; }
-  .q-text { font-size: clamp(.9rem, 2.8vw, 1.3rem); }
+/* When in drawing mode — shrink the question card SVG */
+#game-screen:has(#draw-wrap:not([style*="display: none"])) #obj-svg {
+  max-height: 22vh;
 }
 
-@media (max-height: 650px) {
-  .drawing-pad-container {
-    width: min(24vh, 150px);
-    height: min(24vh, 150px);
-  }
-  #obj-svg { max-height: 18vh; }
-  .title-sm { font-size: 1rem; }
-  .scorebar { gap: 6px; }
-  .pill { padding: .2em .7em; font-size: .75rem; }
-  .draw-controls { gap: 8px; }
-  .btn-mint, .btn-ghost, .btn-yellow {
-    padding: .35em 1.3em;
-    font-size: .9rem;
-  }
+#game-screen:has(#draw-wrap:not([style*="display: none"])) .card {
+  flex: 0 1 auto;
 }
 
-/* Hide scroll hint in drawing mode since it has its own buttons */
-#draw-wrap:not([style*="display: none"]) ~ .scroll-hint,
-#game-screen:has(#draw-wrap[style*="display: flex"]) .scroll-hint {
+/* Hide scroll hint in drawing mode */
+#game-screen:has(#draw-wrap:not([style*="display: none"])) .scroll-hint {
   display: none;
 }
