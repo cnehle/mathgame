@@ -388,59 +388,61 @@ html, body {
   50%      { transform: scale(1.06); }
 }
 
-/* ════════ DRAWING MODE LAYOUT — adaptive ════════ */
-@media (min-width: 760px) {
-  /* On wider screens: show drawing pad NEXT to the question card,
-     so vertical space is preserved for feedback */
-  #game-screen #app {
-    flex-direction: column;
-  }
+/* ════════ DRAWING MODE — flexible layout ════════ */
 
-  /* When drawing mode is active, lay card + drawing pad side by side */
-  #game-screen:has(#draw-wrap:not([style*="display:none"])) #app,
-  #game-screen:has(#draw-wrap[style*="display: flex"]) #app {
-    gap: clamp(8px, 1.5vh, 16px);
-  }
+/* Make game screen use flexbox properly so things shrink */
+#game-screen {
+  align-items: stretch;
 }
 
-/* On smaller screens — make drawing pad smaller to leave room for feedback */
-@media (max-height: 850px) {
-  .drawing-pad-container {
-    width: clamp(160px, 38vh, 230px);
-    height: clamp(160px, 38vh, 230px);
-  }
+#app {
+  /* Force the app to fit within the viewport */
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-@media (max-height: 700px) {
-  .drawing-pad-container {
-    width: clamp(140px, 32vh, 200px);
-    height: clamp(140px, 32vh, 200px);
-  }
-
-  .card {
-    padding: 6px 10px;
-  }
-
-  .q-text {
-    font-size: clamp(.9rem, 2.8vw, 1.3rem);
-  }
-
-  #obj-svg {
-    max-height: 22vh;
-  }
+/* Drawing pad shrinks based on available height */
+.drawing-pad-container {
+  width: min(50vh, 280px);
+  height: min(50vh, 280px);
 }
 
-@media (max-height: 600px) {
+@media (max-height: 900px) {
   .drawing-pad-container {
-    width: 130px;
-    height: 130px;
+    width: min(35vh, 220px);
+    height: min(35vh, 220px);
   }
+  #obj-svg { max-height: 25vh; }
+}
 
-  #obj-svg {
-    max-height: 18vh;
+@media (max-height: 750px) {
+  .drawing-pad-container {
+    width: min(28vh, 180px);
+    height: min(28vh, 180px);
   }
+  #obj-svg { max-height: 22vh; }
+  .card { padding: 6px 10px; gap: 4px; }
+  .q-text { font-size: clamp(.9rem, 2.8vw, 1.3rem); }
+}
 
+@media (max-height: 650px) {
+  .drawing-pad-container {
+    width: min(24vh, 150px);
+    height: min(24vh, 150px);
+  }
+  #obj-svg { max-height: 18vh; }
   .title-sm { font-size: 1rem; }
   .scorebar { gap: 6px; }
   .pill { padding: .2em .7em; font-size: .75rem; }
+  .draw-controls { gap: 8px; }
+  .btn-mint, .btn-ghost, .btn-yellow {
+    padding: .35em 1.3em;
+    font-size: .9rem;
+  }
+}
+
+/* Hide scroll hint in drawing mode since it has its own buttons */
+#draw-wrap:not([style*="display: none"]) ~ .scroll-hint,
+#game-screen:has(#draw-wrap[style*="display: flex"]) .scroll-hint {
+  display: none;
 }
