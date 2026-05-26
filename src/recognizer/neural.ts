@@ -40,10 +40,13 @@ export class NeuralRecognizer {
     );
 
     onProgress?.('Сохраняем модель', 95);
-    await this.model.save(MODEL_STORAGE_KEY);
+await this.model.save(MODEL_STORAGE_KEY);
 
-    onProgress?.('Готово!', 100);
-    this.isReady = true;
+// Temporary: download model files so we can commit them to the repo
+await this.downloadModel();
+
+onProgress?.('Готово!', 100);
+this.isReady = true;
   }
 
   private buildModel(): tf.LayersModel {
@@ -237,5 +240,18 @@ private augment(images: tf.Tensor): tf.Tensor {
 
   ready(): boolean {
     return this.isReady;
+  }
+
+  /**
+   * TEMPORARY — downloads the trained model as files for repo storage.
+   * Triggers download of model.json + weights.bin.
+   */
+  async downloadModel(): Promise<void> {
+    if (!this.model) {
+      console.error('Model not trained yet');
+      return;
+    }
+    await this.model.save('downloads://mathgame-mnist');
+    console.log('Model files downloaded — put them in public/model/');
   }
 }
