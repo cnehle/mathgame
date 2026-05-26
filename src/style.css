@@ -387,3 +387,60 @@ html, body {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.06); }
 }
+
+/* ════════ DRAWING MODE LAYOUT — adaptive ════════ */
+@media (min-width: 760px) {
+  /* On wider screens: show drawing pad NEXT to the question card,
+     so vertical space is preserved for feedback */
+  #game-screen #app {
+    flex-direction: column;
+  }
+
+  /* When drawing mode is active, lay card + drawing pad side by side */
+  #game-screen:has(#draw-wrap:not([style*="display:none"])) #app,
+  #game-screen:has(#draw-wrap[style*="display: flex"]) #app {
+    gap: clamp(8px, 1.5vh, 16px);
+  }
+}
+
+/* On smaller screens — make drawing pad smaller to leave room for feedback */
+@media (max-height: 850px) {
+  .drawing-pad-container {
+    width: clamp(160px, 38vh, 230px);
+    height: clamp(160px, 38vh, 230px);
+  }
+}
+
+@media (max-height: 700px) {
+  .drawing-pad-container {
+    width: clamp(140px, 32vh, 200px);
+    height: clamp(140px, 32vh, 200px);
+  }
+
+  .card {
+    padding: 6px 10px;
+  }
+
+  .q-text {
+    font-size: clamp(.9rem, 2.8vw, 1.3rem);
+  }
+
+  #obj-svg {
+    max-height: 22vh;
+  }
+}
+
+@media (max-height: 600px) {
+  .drawing-pad-container {
+    width: 130px;
+    height: 130px;
+  }
+
+  #obj-svg {
+    max-height: 18vh;
+  }
+
+  .title-sm { font-size: 1rem; }
+  .scorebar { gap: 6px; }
+  .pill { padding: .2em .7em; font-size: .75rem; }
+}
