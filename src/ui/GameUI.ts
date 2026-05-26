@@ -7,8 +7,8 @@ import { DrawingPad } from './DrawingPad';
 
 const BTN_FILLS = ['#FFD93D', '#FF6B9D', '#FF8C69', '#C3B1E1'];
 const BTN_STROKES = ['#8a5c00', '#8a1040', '#a03010', '#5a3e8a'];
-const CORRECT_MSGS = ['⭐ Правильно!', '🎉 Да!', '🌟 Отлично!', '✅ Супер!', '🥳 Молодец!'];
-const WRONG_MSGS = ['😊 Почти!', '💛 Близко!', '🔄 Попробуй ещё!', '💪 Хорошая попытка!'];
+const CORRECT_MSGS = ['Правильно!', 'Да!', 'Отлично!', 'Супер!', 'Молодец!'];
+const WRONG_MSGS = ['Почти!', 'Близко!', 'Попробуй ещё!', 'Хорошая попытка!'];
 const TOTAL = 10;
 
 export class GameUI {
@@ -120,24 +120,24 @@ export class GameUI {
   this.loadQuestion();
 }
 
-private async ensureRecognizerReady(): Promise<void> {
-  const overlay = q<HTMLElement>('#loading-overlay');
-  const stageEl = q<HTMLElement>('#loading-stage');
-  const pctEl = q<HTMLElement>('#loading-pct');
-  const barEl = q<HTMLElement>('#loading-bar');
+  private async ensureRecognizerReady(): Promise<void> {
+    const overlay = q<HTMLElement>('#loading-overlay');
+    const stageEl = q<HTMLElement>('#loading-stage');
+    const pctEl = q<HTMLElement>('#loading-pct');
+    const barEl = q<HTMLElement>('#loading-bar');
 
-  overlay.classList.remove('hidden');
+    overlay.classList.remove('hidden');
 
-  await DrawingPad.initRecognizer((stage, pct) => {
-    stageEl.textContent = stage;
-    pctEl.textContent = `${Math.round(pct)}%`;
-    barEl.style.width = `${pct}%`;
-  });
+    await DrawingPad.initRecognizer((stage, pct) => {
+      stageEl.textContent = stage;
+      pctEl.textContent = `${Math.round(pct)}%`;
+      barEl.style.width = `${pct}%`;
+    });
 
-  // Small delay so the user sees "Готово!"
-  await new Promise((r) => setTimeout(r, 400));
-  overlay.classList.add('hidden');
-}
+    // Small delay so the user sees "Готово!"
+    await new Promise((r) => setTimeout(r, 400));
+    overlay.classList.add('hidden');
+  }
 
   // ── Game ──────────────────────────────────────────────────
   private bindGameEvents(): void {
@@ -219,7 +219,7 @@ private async ensureRecognizerReady(): Promise<void> {
         this.feedback.textContent =
           digit >= 0
             ? `Похоже на ${digit} (${scorePercent}%) — попробуй ещё!`
-            : '🤔 Не разобрать — нарисуй чище!';
+            : 'Не разобрать — нарисуй чище!';
         this.feedback.className = 'feedback wrong';
       }
     });
@@ -286,7 +286,7 @@ private async ensureRecognizerReady(): Promise<void> {
     if (this.state.answered) return;
     this.state.answered = true;
     this.recordTime();
-    this.feedback.textContent = '⏰ Время вышло!';
+    this.feedback.textContent = 'Время вышло!';
     this.feedback.className = 'feedback wrong';
     this.highlightCorrect(this.currentAnswer);
     this.nextBtn.style.display = 'inline-block';
@@ -334,9 +334,7 @@ private async ensureRecognizerReady(): Promise<void> {
     this.completeScreen.classList.remove('hidden');
 
     const pct = Math.round((this.state.score / TOTAL) * 100);
-    const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🌟' : pct >= 50 ? '😊' : '💪';
-    this.finalTxt.textContent =
-      `${emoji} Правильно: ${this.state.score} из ${TOTAL}!`;
+    this.finalTxt.textContent = `Правильно: ${this.state.score} из ${TOTAL}!`;
 
     this.buildResultsChart();
 

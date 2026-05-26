@@ -36,7 +36,7 @@
 <!-- ══ MENU ══ -->
 <div id="menu-screen" class="screen">
   <div class="menu-content">
-    <h1 class="title">&#11088; Считай и играй &#11088;</h1>
+    <h1 class="title">Считай и играй</h1>
     <p class="subtitle">Выбери уровень сложности</p>
 
     <svg id="morph-svg" class="morph-decoration"
@@ -150,10 +150,10 @@
 <!-- ══ GAME ══ -->
 <div id="game-screen" class="screen hidden">
   <div id="app">
-    <h1 class="title-sm">&#11088; Считай и играй &#11088;</h1>
+    <h1 class="title-sm">Считай и играй</h1>
     <div class="scorebar">
-      <div class="pill">&#9989; Счёт: <span id="score-val">0</span></div>
-      <div class="pill">&#127919; Вопрос: <span id="q-num">1</span>/10</div>
+      <div class="pill">Счёт: <span id="score-val">0</span></div>
+      <div class="pill">Вопрос: <span id="q-num">1</span>/10</div>
     </div>
     <div id="timer-track"><div id="timer-bar"></div></div>
     <div class="card">
@@ -169,8 +169,8 @@
       </div>
     </div>
     <div id="feedback" class="feedback"></div>
-    <button id="next-btn" class="next-btn">Дальше &#10152;</button>
-    <p class="scroll-hint">&#8595; прокрути или нажми кнопку</p>
+    <button id="next-btn" class="next-btn">Дальше</button>
+    <p class="scroll-hint">прокрути или нажми кнопку</p>
   </div>
 </div>
 
@@ -178,17 +178,39 @@
 <div id="complete-screen" class="screen hidden">
   <div class="complete-content">
     <svg viewBox="0 0 160 160" class="trophy-svg" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="80" r="72" fill="#FFD93D" opacity=".9">
-        <animate attributeName="r" values="72;80;72" dur="1s" repeatCount="indefinite"/>
+      <!-- Glowing background -->
+      <circle cx="80" cy="80" r="72" fill="#FFD93D" opacity=".25">
+        <animate attributeName="r" values="72;82;72" dur="1.4s" repeatCount="indefinite"/>
       </circle>
-      <text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" font-size="76">&#127881;</text>
+      <circle cx="80" cy="80" r="60" fill="#FFD93D" opacity=".4">
+        <animate attributeName="r" values="60;68;60" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Trophy cup -->
+      <!-- Handles -->
+      <path d="M 38,60 Q 22,60 22,80 Q 22,100 42,100"
+            fill="none" stroke="#c8880a" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 122,60 Q 138,60 138,80 Q 138,100 118,100"
+            fill="none" stroke="#c8880a" stroke-width="6" stroke-linecap="round"/>
+      <!-- Cup body -->
+      <path d="M 42,50 L 118,50 L 110,108 Q 108,118 80,118 Q 52,118 50,108 Z"
+            fill="#FFD93D" stroke="#8a5c00" stroke-width="3"/>
+      <!-- Shine -->
+      <ellipse cx="60" cy="70" rx="6" ry="14" fill="rgba(255,255,255,.5)"/>
+      <!-- Star on cup -->
+      <polygon points="80,72 84,82 95,82 86,89 89,100 80,93 71,100 74,89 65,82 76,82"
+              fill="#fff8c5" stroke="#c8880a" stroke-width="1.5"/>
+      <!-- Stem -->
+      <rect x="68" y="118" width="24" height="10" fill="#c8880a"/>
+      <!-- Base -->
+      <rect x="50" y="128" width="60" height="12" rx="3" fill="#8a5c00"/>
     </svg>
     <h2 class="complete-title">Молодец!</h2>
     <p id="final-txt" class="final-txt"></p>
     <div id="results-chart" class="results-chart"></div>
     <div class="complete-btns">
-      <button id="restart-btn" class="btn-mint">Ещё раз &#128260;</button>
-      <button id="newgame-btn" class="btn-yellow">Сменить уровень &#127918;</button>
+      <button id="restart-btn" class="btn-mint">Ещё раз</button>
+      <button id="newgame-btn" class="btn-yellow">Сменить уровень</button>
     </div>
   </div>
 </div>

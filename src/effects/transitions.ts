@@ -82,15 +82,25 @@ export function spawnCelebration(): void {
   svg.style.cssText =
     'position:fixed;top:20%;left:50%;transform:translateX(-50%);pointer-events:none;z-index:50;width:min(400px,90vw);';
 
-  const emojis = ['⭐', '🌟', '✨', '💫', '🎉'];
-  for (let i = 0; i < 10; i++) {
-    const t = document.createElementNS(ns, 'text');
-    t.textContent = emojis[i % emojis.length];
-    t.setAttribute('x', String(rand(20, 380)));
-    t.setAttribute('y', String(rand(30, 160)));
-    t.setAttribute('font-size', String(rand(22, 42)));
-    t.style.cssText = `animation:celebrate ${rand(7, 13) / 10}s ${(i * 0.08).toFixed(2)}s ease-out both`;
-    svg.appendChild(t);
+    // SVG star particles instead of emoji
+  const starColors = ['#FFD93D', '#FF6B9D', '#6BFFB8', '#C3B1E1', '#FF8C69'];
+  for (let i = 0; i < 14; i++) {
+    const star = document.createElementNS(ns, 'polygon');
+    const cx = rand(30, 370);
+    const cy = rand(40, 160);
+    const size = rand(8, 16);
+    // 5-pointed star around (cx, cy)
+    const points: string[] = [];
+    for (let k = 0; k < 10; k++) {
+      const angle = (Math.PI / 5) * k - Math.PI / 2;
+      const r = k % 2 === 0 ? size : size * 0.45;
+      points.push(`${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`);
+    }
+    star.setAttribute('points', points.join(' '));
+    star.setAttribute('fill', starColors[i % starColors.length]);
+    star.setAttribute('opacity', '0.9');
+    star.style.cssText = `animation:celebrate ${rand(7, 13) / 10}s ${(i * 0.06).toFixed(2)}s ease-out both;`;
+    svg.appendChild(star);
   }
 
   document.body.appendChild(svg);
