@@ -39,15 +39,13 @@ export class GameUI {
   private morpher: SVGMorpher;
   private drawingPad: DrawingPad | null = null;
 
-  private state: GameState = {
+    private state: GameState = {
     phase: 'menu',
     score: 0,
     questionIndex: 0,
     totalQuestions: TOTAL,
     answered: false,
     difficulty: 'easy',
-    responseTimes: [],
-    questionStartTime: 0,
   };
   private currentAnswer = 0;
   private morphLoopActive = false;
@@ -103,15 +101,13 @@ export class GameUI {
     await this.ensureRecognizerReady();
   }
 
-  this.state = {
+    this.state = {
     phase: 'playing',
     score: 0,
     questionIndex: 0,
     totalQuestions: TOTAL,
     answered: false,
     difficulty,
-    responseTimes: [],
-    questionStartTime: performance.now(),
   };
   this.scrollTransition.enabled = true;
   this.menuScreen.classList.add('hidden');
@@ -155,7 +151,6 @@ export class GameUI {
 
   private loadQuestion(): void {
     this.state.answered = false;
-    this.state.questionStartTime = performance.now();
     this.feedback.textContent = '';
     this.feedback.className = 'feedback';
     this.nextBtn.style.display = 'none';
@@ -206,7 +201,6 @@ export class GameUI {
 
       if (correct) {
         this.state.answered = true;
-        this.recordTime();
         this.state.score++;
         this.scoreEl.textContent = String(this.state.score);
         this.feedback.textContent =
@@ -266,7 +260,6 @@ export class GameUI {
     if (this.state.answered) return;
     this.state.answered = true;
     this.timer.stop();
-    this.recordTime();
 
     if (chosen === correct) {
       this.state.score++;
@@ -285,7 +278,6 @@ export class GameUI {
   private onTimeUp(): void {
     if (this.state.answered) return;
     this.state.answered = true;
-    this.recordTime();
     this.feedback.textContent = 'Время вышло!';
     this.feedback.className = 'feedback wrong';
     this.highlightCorrect(this.currentAnswer);
@@ -310,11 +302,6 @@ export class GameUI {
     });
   }
 
-  private recordTime(): void {
-    const elapsed = (performance.now() - this.state.questionStartTime) / 1000;
-    this.state.responseTimes.push(Math.round(elapsed * 10) / 10);
-  }
-
   private async advanceQuestion(): Promise<void> {
     this.state.questionIndex++;
     if (this.state.questionIndex >= TOTAL) {
@@ -333,10 +320,7 @@ export class GameUI {
     this.gameScreen.classList.add('hidden');
     this.completeScreen.classList.remove('hidden');
 
-    const pct = Math.round((this.state.score / TOTAL) * 100);
     this.finalTxt.textContent = `Правильно: ${this.state.score} из ${TOTAL}!`;
-
-    this.buildResultsChart();
 
     q<HTMLButtonElement>('#restart-btn').onclick = () =>
       this.startGame(this.state.difficulty);
@@ -345,96 +329,6 @@ export class GameUI {
       this.menuScreen.classList.remove('hidden');
       this.startMenuMorphLoop();
     };
-  }
-
-  // ── Results chart ─────────────────────────────────────────
-  private buildResultsChart(): void {
-    const chartEl = q<HTMLElement>('#results-chart');
-    chartEl.innerHTML = '';
-
-    const times = this.state.responseTimes;
-    if (times.length === 0) return;
-
-    const ns = 'http://www.w3.org/2000/svg';
-    const W = 320;
-    const H = 120;
-    const PAD = 24;
-    const BAR_W = (W - PAD * 2) / times.length - 4;
-    const maxT = Math.max(...times, 5);
-
-    const svg = document.createElementNS(ns, 'svg') as SVGSVGElement;
-    svg.setAttribute('viewBox', `0 0 ${W} ${H + 20}`);
-    svg.style.cssText = 'width:100%;max-width:340px;';
-
-    const title = document.createElementNS(ns, 'text');
-    title.setAttribute('x', String(W / 2));
-    title.setAttribute('y', '14');
-    title.setAttribute('text-anchor', 'middle');
-    title.setAttribute('font-family', 'Fredoka One,cursive');
-    title.setAttribute('font-size', '11');
-    title.setAttribute('fill', 'rgba(255,255,255,0.6)');
-    title.textContent = 'Время ответа (сек)';
-    svg.appendChild(title);
-
-    times.forEach((t, i) => {
-      const barH = Math.max(4, ((maxT - t) / maxT) * H * 0.85);
-      const x = PAD + i * ((W - PAD * 2) / times.length);
-      const y = PAD + H - barH;
-
-      const bg = document.createElementNS(ns, 'rect');
-      bg.setAttribute('x', String(x));
-      bg.setAttribute('y', String(PAD));
-      bg.setAttribute('width', String(BAR_W));
-      bg.setAttribute('height', String(H));
-      bg.setAttribute('rx', '4');
-      bg.setAttribute('fill', 'rgba(255,255,255,0.07)');
-      svg.appendChild(bg);
-
-      const bar = document.createElementNS(ns, 'rect');
-      bar.setAttribute('x', String(x));
-      bar.setAttribute('y', String(PAD + H));
-      bar.setAttribute('width', String(BAR_W));
-      bar.setAttribute('height', '0');
-      bar.setAttribute('rx', '4');
-      bar.setAttribute('fill', t < 3 ? '#6BFFB8' : t < 7 ? '#FFD93D' : '#FF6B9D');
-      svg.appendChild(bar);
-
-      const animY = document.createElementNS(ns, 'animate');
-      animY.setAttribute('attributeName', 'y');
-      animY.setAttribute('from', String(PAD + H));
-      animY.setAttribute('to', String(y));
-      animY.setAttribute('dur', '0.6s');
-      animY.setAttribute('begin', `${i * 0.07}s`);
-      animY.setAttribute('fill', 'freeze');
-      animY.setAttribute('calcMode', 'spline');
-      animY.setAttribute('keySplines', '0.34 1.56 0.64 1');
-      animY.setAttribute('keyTimes', '0;1');
-      bar.appendChild(animY);
-
-      const animH = document.createElementNS(ns, 'animate');
-      animH.setAttribute('attributeName', 'height');
-      animH.setAttribute('from', '0');
-      animH.setAttribute('to', String(barH));
-      animH.setAttribute('dur', '0.6s');
-      animH.setAttribute('begin', `${i * 0.07}s`);
-      animH.setAttribute('fill', 'freeze');
-      animH.setAttribute('calcMode', 'spline');
-      animH.setAttribute('keySplines', '0.34 1.56 0.64 1');
-      animH.setAttribute('keyTimes', '0;1');
-      bar.appendChild(animH);
-
-      const label = document.createElementNS(ns, 'text');
-      label.setAttribute('x', String(x + BAR_W / 2));
-      label.setAttribute('y', String(PAD + H + 14));
-      label.setAttribute('text-anchor', 'middle');
-      label.setAttribute('font-family', 'Fredoka One,cursive');
-      label.setAttribute('font-size', '9');
-      label.setAttribute('fill', 'rgba(255,255,255,0.5)');
-      label.textContent = String(i + 1);
-      svg.appendChild(label);
-    });
-
-    chartEl.appendChild(svg);
   }
 
   // ── Stars ─────────────────────────────────────────────────

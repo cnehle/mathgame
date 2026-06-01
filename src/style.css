@@ -269,10 +269,6 @@ html, body {
   font-weight: 700; text-align: center;
 }
 
-.results-chart {
-  display: flex; justify-content: center; width: 100%;
-}
-
 .complete-btns {
   display: flex; gap: clamp(8px, 2vw, 16px);
   flex-wrap: wrap; justify-content: center;
