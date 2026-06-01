@@ -64,7 +64,7 @@ export class GameUI {
     this.bindGameEvents();
     this.startMenuMorphLoop();
     // Performance test panel (Ctrl+P to open)
-    new PerfPanel('GSAP version', this.objSvg, this.morphSvg);
+    new PerfPanel('CSS version', this.objSvg, this.morphSvg);
   }
 
   // ── Menu morph loop ───────────────────────────────────────
