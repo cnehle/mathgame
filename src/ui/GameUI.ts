@@ -4,6 +4,7 @@ import { MouseTracker, ParallaxBackground, CursorTrail } from '../effects/mouse'
 import { ScrollTransition, TimerBar, spawnCelebration } from '../effects/transitions';
 import { SVGMorpher } from '../effects/morpher';
 import { DrawingPad } from './DrawingPad';
+import { PerfPanel } from '../metrics/PerfPanel';
 
 const BTN_FILLS = ['#FFD93D', '#FF6B9D', '#FF8C69', '#C3B1E1'];
 const BTN_STROKES = ['#8a5c00', '#8a1040', '#a03010', '#5a3e8a'];
@@ -62,6 +63,8 @@ export class GameUI {
     this.bindMenuEvents();
     this.bindGameEvents();
     this.startMenuMorphLoop();
+    // Performance test panel (Ctrl+P to open)
+    new PerfPanel('GSAP version', this.objSvg, this.morphSvg);
   }
 
   // ── Menu morph loop ───────────────────────────────────────
