@@ -558,3 +558,98 @@ html, body {
 .perf-panel button {
   cursor: pointer !important;
 }
+
+/* ════════ COLLECT MODE ════════ */
+#collect-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  background: #1a1a4e;
+  cursor: auto;
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+#collect-screen * { cursor: auto; box-sizing: border-box; }
+
+.collect-title {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  color: #FFD93D;
+  font-size: 1.5rem;
+  margin: 0;
+}
+.collect-hint {
+  color: rgba(255,255,255,.75);
+  font-size: .9rem;
+  margin: 0;
+  text-align: center;
+}
+
+#collect-pad {
+  width: 280px;
+  height: 280px;
+  flex-shrink: 0;
+}
+#collect-pad svg {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 16px;
+  display: block;
+}
+
+.collect-digits {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.collect-digit-btn {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-size: 1.3rem;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: #6BFFB8;
+  color: #0a3a22;
+  box-shadow: 0 3px 0 #1a6a46;
+  cursor: pointer;
+}
+.collect-digit-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.collect-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.collect-counter {
+  font-family: 'Courier New', monospace;
+  font-size: .72rem;
+  color: #6BFFB8;
+  text-align: center;
+}
+.collect-btn {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-size: .9rem;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 50px;
+  background: rgba(255,255,255,.18);
+  color: white;
+  cursor: pointer;
+}
+.collect-btn-main {
+  background: #FFD93D;
+  color: #5a4500;
+}
+.collect-btn-danger {
+  background: rgba(255,107,157,.4);
+}
