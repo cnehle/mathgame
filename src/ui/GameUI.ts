@@ -197,6 +197,11 @@ export class GameUI {
     const padContainer = q<HTMLElement>('#drawing-pad-container');
     padContainer.innerHTML = '';
     this.drawingPad = new DrawingPad(padContainer);
+    // TEMP: expose dataset collection to console
+(window as unknown as Record<string, unknown>).collect = (label: number) =>
+  this.drawingPad?.collectSample(label);
+(window as unknown as Record<string, unknown>).downloadDataset = () =>
+  DrawingPad.downloadDataset();
     this.drawingPad.setCorrectAnswer(this.currentAnswer);
 
     this.drawingPad.onRecognized(({ digit, score, correct }) => {

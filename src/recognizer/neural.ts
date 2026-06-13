@@ -11,6 +11,28 @@ export interface NeuralRecognitionResult {
   allScores: number[];
 }
 
+/* interface UserSample {
+  label: number;
+  pixels: number[];
+}
+
+async function loadUserSamples(filename: string): Promise<UserSample[]> {
+  try {
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const resp = await fetch(`${baseUrl}${filename}`);
+    if (!resp.ok) return [];
+    const raw: UserSample[] = await resp.json();
+    return raw.map((s) => {
+      const max = Math.max(...s.pixels);
+      return max > 1
+        ? { label: s.label, pixels: s.pixels.map((p: number) => p / 255) }
+        : s;
+    });
+  } catch {
+    return [];
+  }
+} */
+
 export class NeuralRecognizer {
   private model: tf.LayersModel | null = null;
   private isReady = false;

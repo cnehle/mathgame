@@ -12,6 +12,9 @@ export class DrawingPad {
   // Shared across all instances — model trains only once
   private static recognizer: NeuralRecognizer | null = null;
   private static preprocessor: DrawingPreprocessor | null = null;
+  // ── TEMP: dataset collection mode ──────────────────────────
+// Used once to gather real handwriting samples for retraining.
+private static collected: { label: number; pixels: number[] }[] = [];
 
 /**
    * Initializes the shared neural recognizer.
@@ -227,4 +230,56 @@ export class DrawingPad {
       y: (clientY - rect.top) * (300 / rect.height),
     };
   }
+
+  /**
+ * TEMP — saves current drawing as a labeled training sample.
+ * Usage from console: collect(7) after drawing a "7".
+ */
+collectSample(label: number): void {
+  if (this.points.length < 8) {
+    console.warn('Рисунок слишком маленький, не сохранён');
+    return;
+  }
+  if (!DrawingPad.preprocessor) {
+    console.error('Preprocessor not ready');
+    return;
+  }
+  const pixels = DrawingPad.preprocessor.process(this.svg);
+  DrawingPad.collected.push({ label, pixels: Array.from(pixels) });
+  console.log(
+    `✅ Сохранено: цифра ${label}. Всего примеров: ${DrawingPad.collected.length}`
+  );
+  this.clear();
+}
+
+/**
+ * TEMP — downloads all collected samples as a JSON file.
+ */
+static downloadDataset(): void {
+  if (DrawingPad.collected.length === 0) {
+    console.warn('Нет собранных примеров');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(DrawingPad.collected)], {
+    type: 'application/json',
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'user-digits.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  console.log(`📦 Скачано ${DrawingPad.collected.length} примеров`);
+}
+
+/** True if the user has drawn at least a minimal stroke. */
+hasDrawing(): boolean {
+  return this.points.length >= 8;
+}
+
+/** Direct access to the underlying SVG (used by collection mode). */
+getSvg(): SVGSVGElement {
+  return this.svg;
+}
 }
