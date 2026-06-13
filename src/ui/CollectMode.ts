@@ -30,9 +30,8 @@ export class CollectMode {
 
   constructor() {
     // Hide all regular screens
-    document
-      .querySelectorAll<HTMLElement>('#menu-screen, #game-screen, #complete-screen')
-      .forEach((el) => el.classList.add('hidden'));
+    // Remove everything from the page — collect mode takes over completely
+    document.body.innerHTML = '';
 
     // Build UI
     const root = document.createElement('div');
