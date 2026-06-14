@@ -115,7 +115,9 @@ export class CollectMode {
     const perDigit = new Array(10).fill(0);
     all.forEach((s) => perDigit[s.label]++);
     this.counterEl.textContent =
-      `Всего: ${all.length}  [` + perDigit.map((n, i) => `${i}:${n}`).join(' ') + `]`;
+      `Всего: ${all.length}  [` +
+      perDigit.map((n, i) => `${i}:${n}`).join(' ') +
+      `]`;
   }
 
   private download(): void {

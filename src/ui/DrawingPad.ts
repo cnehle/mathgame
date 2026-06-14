@@ -12,17 +12,15 @@ export class DrawingPad {
   // Shared across all instances — model trains only once
   private static recognizer: NeuralRecognizer | null = null;
   private static preprocessor: DrawingPreprocessor | null = null;
-  // ── TEMP: dataset collection mode ──────────────────────────
-// Used once to gather real handwriting samples for retraining.
-private static collected: { label: number; pixels: number[] }[] = [];
+  private isRecognizing = false;
 
-/**
+  /**
    * Initializes the shared neural recognizer.
    * Call this once before creating any DrawingPad instances.
    * Loads from IndexedDB if available, otherwise trains a new model.
    */
   static async initRecognizer(
-    onProgress?: (stage: string, pct: number) => void
+    onProgress?: (stage: string, pct: number) => void,
   ): Promise<void> {
     if (DrawingPad.recognizer && DrawingPad.recognizer.ready()) return;
     DrawingPad.recognizer = new NeuralRecognizer();
@@ -32,6 +30,7 @@ private static collected: { label: number; pixels: number[] }[] = [];
 
   private svg: SVGSVGElement;
   private currentPath: SVGPathElement | null = null;
+  private currentD = '';
   private points: Point[] = [];
   private isDrawing = false;
   private correctAnswer = 0;
@@ -87,6 +86,7 @@ private static collected: { label: number; pixels: number[] }[] = [];
   }
 
   recognize(): void {
+    if (this.isRecognizing) return; // ignore double-taps during animation
     if (this.points.length < 8) {
       this.onRecognizedCb?.({ digit: -1, score: 0, correct: false });
       return;
@@ -95,32 +95,28 @@ private static collected: { label: number; pixels: number[] }[] = [];
       console.error('Recognizer not initialized');
       return;
     }
+    this.isRecognizing = true;
 
     // Convert SVG drawing to 28×28 MNIST format
     const imageData = DrawingPad.preprocessor.process(this.svg);
     const result = DrawingPad.recognizer.predict(imageData);
 
-    console.log(
-      'Neural prediction:',
-      result.allScores
-        .map((s, i) => `${i}:${(s * 100).toFixed(1)}%`)
-        .join(' ')
-    );
-    console.log(`Best: ${result.digit} (${(result.score * 100).toFixed(1)}%)`);
-
-    const correct =
-      result.digit === this.correctAnswer && result.score > 0.5;
+    const correct = result.digit === this.correctAnswer && result.score > 0.5;
 
     if (correct) this.animateSuccess();
     else this.animateFailure();
 
-    setTimeout(() => {
-      this.onRecognizedCb?.({
-        digit: result.digit,
-        score: result.score,
-        correct,
-      });
-    }, correct ? 400 : 500);
+    setTimeout(
+      () => {
+        this.isRecognizing = false;
+        this.onRecognizedCb?.({
+          digit: result.digit,
+          score: result.score,
+          correct,
+        });
+      },
+      correct ? 400 : 500,
+    );
   }
 
   clear(): void {
@@ -128,6 +124,7 @@ private static collected: { label: number; pixels: number[] }[] = [];
     this.points = [];
     this.currentPath = null;
     this.isDrawing = false;
+    this.isRecognizing = false;
     this.svg.style.animation = '';
   }
 
@@ -141,8 +138,12 @@ private static collected: { label: number; pixels: number[] }[] = [];
     this.svg.addEventListener('mousemove', this.onMove);
     this.svg.addEventListener('mouseup', this.onEnd);
     this.svg.addEventListener('mouseleave', this.onEnd);
-    this.svg.addEventListener('touchstart', this.onTouchStart, { passive: false });
-    this.svg.addEventListener('touchmove', this.onTouchMove, { passive: false });
+    this.svg.addEventListener('touchstart', this.onTouchStart, {
+      passive: false,
+    });
+    this.svg.addEventListener('touchmove', this.onTouchMove, {
+      passive: false,
+    });
     this.svg.addEventListener('touchend', this.onEnd);
   }
 
@@ -175,7 +176,9 @@ private static collected: { label: number; pixels: number[] }[] = [];
   private onTouchMove = (e: TouchEvent): void => {
     e.preventDefault();
     if (!this.isDrawing) return;
-    this.continueStroke(this.svgPoint(e.touches[0].clientX, e.touches[0].clientY));
+    this.continueStroke(
+      this.svgPoint(e.touches[0].clientX, e.touches[0].clientY),
+    );
   };
 
   private onEnd = (): void => {
@@ -193,15 +196,18 @@ private static collected: { label: number; pixels: number[] }[] = [];
     this.currentPath.setAttribute('stroke-width', '6');
     this.currentPath.setAttribute('stroke-linecap', 'round');
     this.currentPath.setAttribute('stroke-linejoin', 'round');
-    this.currentPath.setAttribute('d', `M ${pt.x} ${pt.y}`);
+    this.currentD = `M ${pt.x} ${pt.y}`;
+    this.currentPath.setAttribute('d', this.currentD);
     this.svg.appendChild(this.currentPath);
   }
 
   private continueStroke(pt: Point): void {
     this.points.push(pt);
     if (!this.currentPath) return;
-    const d = this.currentPath.getAttribute('d') ?? '';
-    this.currentPath.setAttribute('d', `${d} L ${pt.x} ${pt.y}`);
+    // Keep path string in memory — avoids re-reading the DOM attribute
+    // on every move event (which was O(n²) over the stroke length)
+    this.currentD += ` L ${pt.x} ${pt.y}`;
+    this.currentPath.setAttribute('d', this.currentD);
   }
 
   private animateSuccess(): void {
@@ -231,55 +237,13 @@ private static collected: { label: number; pixels: number[] }[] = [];
     };
   }
 
-  /**
- * TEMP — saves current drawing as a labeled training sample.
- * Usage from console: collect(7) after drawing a "7".
- */
-collectSample(label: number): void {
-  if (this.points.length < 8) {
-    console.warn('Рисунок слишком маленький, не сохранён');
-    return;
+  /** True if the user has drawn at least a minimal stroke. */
+  hasDrawing(): boolean {
+    return this.points.length >= 8;
   }
-  if (!DrawingPad.preprocessor) {
-    console.error('Preprocessor not ready');
-    return;
+
+  /** Direct access to the underlying SVG (used by collection mode). */
+  getSvg(): SVGSVGElement {
+    return this.svg;
   }
-  const pixels = DrawingPad.preprocessor.process(this.svg);
-  DrawingPad.collected.push({ label, pixels: Array.from(pixels) });
-  console.log(
-    `✅ Сохранено: цифра ${label}. Всего примеров: ${DrawingPad.collected.length}`
-  );
-  this.clear();
-}
-
-/**
- * TEMP — downloads all collected samples as a JSON file.
- */
-static downloadDataset(): void {
-  if (DrawingPad.collected.length === 0) {
-    console.warn('Нет собранных примеров');
-    return;
-  }
-  const blob = new Blob([JSON.stringify(DrawingPad.collected)], {
-    type: 'application/json',
-  });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'user-digits.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
-  console.log(`📦 Скачано ${DrawingPad.collected.length} примеров`);
-}
-
-/** True if the user has drawn at least a minimal stroke. */
-hasDrawing(): boolean {
-  return this.points.length >= 8;
-}
-
-/** Direct access to the underlying SVG (used by collection mode). */
-getSvg(): SVGSVGElement {
-  return this.svg;
-}
 }

@@ -1,4 +1,18 @@
 import type { MouseState } from '../types';
+// ── Tuning constants ─────────────────────────────────────────
+/** Lerp smoothing factor: lower = heavier inertia. */
+const LERP_EASE = 0.06;
+/** Moon base position in background SVG coordinates. */
+const MOON_BASE_X = 880;
+const MOON_BASE_Y = 72;
+/** Parallax shift amplitudes per layer. */
+const STARS_SHIFT_X = 12;
+const STARS_SHIFT_Y = 8;
+const MOON_SHIFT_X = 30;
+const MOON_SHIFT_Y = 20;
+const CLOUD_SHIFT_EVEN = -18;
+const CLOUD_SHIFT_ODD = -12;
+const CLOUD_SHIFT_Y = 5;
 
 export class MouseTracker {
   private state: MouseState = { x: 0, y: 0, normX: 0, normY: 0 };
@@ -22,10 +36,8 @@ export class MouseTracker {
   };
 
   private tick = (): void => {
-    // Smooth lerp towards target
-    const ease = 0.06;
-    this.currentNormX += (this.targetNormX - this.currentNormX) * ease;
-    this.currentNormY += (this.targetNormY - this.currentNormY) * ease;
+    this.currentNormX += (this.targetNormX - this.currentNormX) * LERP_EASE;
+    this.currentNormY += (this.targetNormY - this.currentNormY) * LERP_EASE;
     this.state.normX = this.currentNormX;
     this.state.normY = this.currentNormY;
     this.listeners.forEach((fn) => fn(this.state));
@@ -58,24 +70,28 @@ export class ParallaxBackground {
     this.clouds = Array.from(bgSvg.querySelectorAll('.cloud')) as SVGElement[];
 
     this.unsub = tracker.subscribe(({ normX, normY }) => {
-      // Stars move subtly (layer 1)
       if (this.starGroup) {
         this.starGroup.setAttribute(
           'transform',
-          `translate(${normX * 12},${normY * 8})`
+          `translate(${normX * STARS_SHIFT_X},${normY * STARS_SHIFT_Y})`,
         );
       }
-      // Moon moves more (layer 2)
       if (this.moon) {
-        const baseX = 880;
-        const baseY = 72;
-        this.moon.setAttribute('cx', String(baseX + normX * 30));
-        this.moon.setAttribute('cy', String(baseY + normY * 20));
+        this.moon.setAttribute(
+          'cx',
+          String(MOON_BASE_X + normX * MOON_SHIFT_X),
+        );
+        this.moon.setAttribute(
+          'cy',
+          String(MOON_BASE_Y + normY * MOON_SHIFT_Y),
+        );
       }
-      // Clouds move opposite direction (layer 3)
       this.clouds.forEach((c, i) => {
-        const factor = i % 2 === 0 ? -18 : -12;
-        c.setAttribute('transform', `translate(${normX * factor},${normY * 5})`);
+        const factor = i % 2 === 0 ? CLOUD_SHIFT_EVEN : CLOUD_SHIFT_ODD;
+        c.setAttribute(
+          'transform',
+          `translate(${normX * factor},${normY * CLOUD_SHIFT_Y})`,
+        );
       });
     });
   }

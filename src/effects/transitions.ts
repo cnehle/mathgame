@@ -1,4 +1,8 @@
 import { rand, delay } from '../utils';
+/** Wheel deltaY threshold to advance to the next question. */
+const WHEEL_THRESHOLD = 30;
+/** Swipe distance (px) threshold on touch devices. */
+const SWIPE_THRESHOLD = 40;
 
 // Scroll-based slide transition between questions
 export class ScrollTransition {
@@ -15,7 +19,7 @@ export class ScrollTransition {
     this.container = container;
 
     this.wheelHandler = (e: WheelEvent) => {
-      if (e.deltaY > 30) this.triggerNext();
+      if (e.deltaY > WHEEL_THRESHOLD) this.triggerNext();
     };
 
     this.touchHandler = (e: TouchEvent) => {
@@ -24,12 +28,14 @@ export class ScrollTransition {
 
     this.touchEndHandler = (e: TouchEvent) => {
       const delta = this.touchStartY - e.changedTouches[0].clientY;
-      if (delta > 40) this.triggerNext();
+      if (delta > SWIPE_THRESHOLD) this.triggerNext();
     };
 
     window.addEventListener('wheel', this.wheelHandler, { passive: true });
     window.addEventListener('touchstart', this.touchHandler, { passive: true });
-    window.addEventListener('touchend', this.touchEndHandler, { passive: true });
+    window.addEventListener('touchend', this.touchEndHandler, {
+      passive: true,
+    });
   }
 
   onNext(fn: () => void): void {
@@ -37,17 +43,18 @@ export class ScrollTransition {
   }
 
   private triggerNext(): void {
-  if (this.isAnimating || !this.onScrollCallback) return;
-  if (!this.enabled) return;
-  this.onScrollCallback();
-}
+    if (this.isAnimating || !this.onScrollCallback) return;
+    if (!this.enabled) return;
+    this.onScrollCallback();
+  }
 
   // Animate card sliding out down, new content coming in from top
   async transition(onMidpoint: () => void): Promise<void> {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
-    this.container.style.transition = 'transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s';
+    this.container.style.transition =
+      'transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s';
     this.container.style.transform = 'translateY(-40px)';
     this.container.style.opacity = '0';
 
@@ -61,7 +68,8 @@ export class ScrollTransition {
     // Force reflow
     void this.container.offsetHeight;
 
-    this.container.style.transition = 'transform 0.4s cubic-bezier(.34,1.2,.64,1), opacity 0.4s';
+    this.container.style.transition =
+      'transform 0.4s cubic-bezier(.34,1.2,.64,1), opacity 0.4s';
     this.container.style.transform = 'translateY(0)';
     this.container.style.opacity = '1';
 
@@ -84,7 +92,7 @@ export function spawnCelebration(): void {
   svg.style.cssText =
     'position:fixed;top:20%;left:50%;transform:translateX(-50%);pointer-events:none;z-index:50;width:min(400px,90vw);';
 
-    // SVG star particles instead of emoji
+  // SVG star particles instead of emoji
   const starColors = ['#FFD93D', '#FF6B9D', '#6BFFB8', '#C3B1E1', '#FF8C69'];
   for (let i = 0; i < 14; i++) {
     const star = document.createElementNS(ns, 'polygon');

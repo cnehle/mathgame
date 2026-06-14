@@ -1,7 +1,19 @@
 import type { GameState, Difficulty } from '../types';
-import { DIFFICULTY_CONFIG, QuestionGenerator, buildAnswerOptions } from '../game/logic';
-import { MouseTracker, ParallaxBackground, CursorTrail } from '../effects/mouse';
-import { ScrollTransition, TimerBar, spawnCelebration } from '../effects/transitions';
+import {
+  DIFFICULTY_CONFIG,
+  QuestionGenerator,
+  buildAnswerOptions,
+} from '../game/logic';
+import {
+  MouseTracker,
+  ParallaxBackground,
+  CursorTrail,
+} from '../effects/mouse';
+import {
+  ScrollTransition,
+  TimerBar,
+  spawnCelebration,
+} from '../effects/transitions';
 import { SVGMorpher } from '../effects/morpher';
 import { DrawingPad } from './DrawingPad';
 import { PerfPanel } from '../metrics/PerfPanel';
@@ -41,7 +53,7 @@ export class GameUI {
   private morpher: SVGMorpher;
   private drawingPad: DrawingPad | null = null;
 
-    private state: GameState = {
+  private state: GameState = {
     phase: 'menu',
     score: 0,
     questionIndex: 0,
@@ -98,27 +110,27 @@ export class GameUI {
   }
 
   private async startGame(difficulty: Difficulty): Promise<void> {
-  this.stopMenuMorphLoop();
+    this.stopMenuMorphLoop();
 
-  // For drawing mode, ensure neural network is ready first
-  if (difficulty === 'drawing') {
-    await this.ensureRecognizerReady();
-  }
+    // For drawing mode, ensure neural network is ready first
+    if (difficulty === 'drawing') {
+      await this.ensureRecognizerReady();
+    }
 
     this.state = {
-    phase: 'playing',
-    score: 0,
-    questionIndex: 0,
-    totalQuestions: TOTAL,
-    answered: false,
-    difficulty,
-  };
-  this.scrollTransition.enabled = true;
-  this.menuScreen.classList.add('hidden');
-  this.gameScreen.classList.remove('hidden');
-  this.completeScreen.classList.add('hidden');
-  this.loadQuestion();
-}
+      phase: 'playing',
+      score: 0,
+      questionIndex: 0,
+      totalQuestions: TOTAL,
+      answered: false,
+      difficulty,
+    };
+    this.scrollTransition.enabled = true;
+    this.menuScreen.classList.add('hidden');
+    this.gameScreen.classList.remove('hidden');
+    this.completeScreen.classList.add('hidden');
+    this.loadQuestion();
+  }
 
   private async ensureRecognizerReady(): Promise<void> {
     const overlay = q<HTMLElement>('#loading-overlay');
@@ -163,7 +175,7 @@ export class GameUI {
     const cfg = DIFFICULTY_CONFIG[this.state.difficulty];
     const question = this.questionGen.generate(
       this.state.questionIndex,
-      this.state.difficulty
+      this.state.difficulty,
     );
     this.currentAnswer = question.answer;
     this.qText.textContent = question.text;
@@ -192,49 +204,51 @@ export class GameUI {
     this.answersWrap.style.display = 'none';
     this.drawWrap.style.display = 'flex';
 
-    if (this.drawingPad) {
-      this.drawingPad.destroy();
+    // Create the pad once, reuse it for subsequent questions
+    if (!this.drawingPad) {
+      const padContainer = q<HTMLElement>('#drawing-pad-container');
+      this.drawingPad = new DrawingPad(padContainer);
+      this.drawingPad.onRecognized((res) => this.onDrawingResult(res));
+    } else {
+      this.drawingPad.clear();
     }
-    const padContainer = q<HTMLElement>('#drawing-pad-container');
-    padContainer.innerHTML = '';
-    this.drawingPad = new DrawingPad(padContainer);
-    // TEMP: expose dataset collection to console
-(window as unknown as Record<string, unknown>).collect = (label: number) =>
-  this.drawingPad?.collectSample(label);
-(window as unknown as Record<string, unknown>).downloadDataset = () =>
-  DrawingPad.downloadDataset();
     this.drawingPad.setCorrectAnswer(this.currentAnswer);
+  }
 
-    this.drawingPad.onRecognized(({ digit, score, correct }) => {
-      if (this.state.answered) return;
+  private onDrawingResult({
+    digit,
+    score,
+    correct,
+  }: {
+    digit: number;
+    score: number;
+    correct: boolean;
+  }): void {
+    if (this.state.answered) return;
 
-      if (correct) {
-        this.state.answered = true;
-        this.state.score++;
-        this.scoreEl.textContent = String(this.state.score);
-        this.feedback.textContent =
-          CORRECT_MSGS[rand(0, CORRECT_MSGS.length - 1)];
-        this.feedback.className = 'feedback correct';
-        spawnCelebration();
-        this.nextBtn.style.display = 'inline-block';
-      } else {
-        const scorePercent = Math.round(score * 100);
-        this.feedback.textContent =
-          digit >= 0
-            ? `Похоже на ${digit} (${scorePercent}%) — попробуй ещё!`
-            : 'Не разобрать — нарисуй чище!';
-        this.feedback.className = 'feedback wrong';
-      }
-    });
+    if (correct) {
+      this.state.answered = true;
+      this.state.score++;
+      this.scoreEl.textContent = String(this.state.score);
+      this.feedback.textContent =
+        CORRECT_MSGS[rand(0, CORRECT_MSGS.length - 1)];
+      this.feedback.className = 'feedback correct';
+      spawnCelebration();
+      this.nextBtn.style.display = 'inline-block';
+    } else {
+      const scorePercent = Math.round(score * 100);
+      this.feedback.textContent =
+        digit >= 0
+          ? `Похоже на ${digit} (${scorePercent}%) — попробуй ещё!`
+          : 'Не разобрать — нарисуй чище!';
+      this.feedback.className = 'feedback wrong';
+    }
   }
 
   private showButtonMode(): void {
     this.answersWrap.style.display = 'flex';
     this.drawWrap.style.display = 'none';
-    if (this.drawingPad) {
-      this.drawingPad.destroy();
-      this.drawingPad = null;
-    }
+    this.drawingPad?.clear();
   }
 
   // ── Answer buttons ────────────────────────────────────────
@@ -244,6 +258,7 @@ export class GameUI {
       const btn = document.createElement('button');
       btn.className = 'ans-btn';
       btn.dataset.v = String(num);
+      btn.setAttribute('aria-label', `Ответ ${num}`);
       const f = BTN_FILLS[i];
       const s = BTN_STROKES[i];
       btn.innerHTML = `<svg viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
@@ -260,12 +275,12 @@ export class GameUI {
         btn.style.transform = '';
         btn.style.filter = '';
       });
-      btn.addEventListener('click', () => this.onAnswer(num, correct, btn));
+      btn.addEventListener('click', () => this.onAnswer(num, correct));
       this.answersWrap.appendChild(btn);
     });
   }
 
-  private onAnswer(chosen: number, correct: number, _btn: HTMLButtonElement): void {
+  private onAnswer(chosen: number, correct: number): void {
     if (this.state.answered) return;
     this.state.answered = true;
     this.timer.stop();
@@ -273,7 +288,8 @@ export class GameUI {
     if (chosen === correct) {
       this.state.score++;
       this.scoreEl.textContent = String(this.state.score);
-      this.feedback.textContent = CORRECT_MSGS[rand(0, CORRECT_MSGS.length - 1)];
+      this.feedback.textContent =
+        CORRECT_MSGS[rand(0, CORRECT_MSGS.length - 1)];
       this.feedback.className = 'feedback correct';
       spawnCelebration();
     } else {
