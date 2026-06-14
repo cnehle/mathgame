@@ -1,3 +1,5 @@
+import { rand, delay } from '../utils';
+
 // Scroll-based slide transition between questions
 export class ScrollTransition {
   private container: HTMLElement;
@@ -164,12 +166,4 @@ export class TimerBar {
     }
     this.rafId = requestAnimationFrame(this.tick);
   };
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-function rand(a: number, b: number): number {
-  return Math.floor(Math.random() * (b - a + 1)) + a;
 }
